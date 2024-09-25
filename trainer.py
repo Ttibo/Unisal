@@ -381,10 +381,12 @@ if __name__ == "__main__":
     # move model to device
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
-    packaging_ = dataloaders.PACKAGINGDataset(path="/Users/thibaultlelong/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_15/")
 
-    dataloader_ = DataLoader(packaging_, batch_size=6, shuffle=True)
+    path_dataset_ = 'C:/Users/Shadow/Documents/Dataset/Packaging_delta_3_sigma_20/'
+    packaging_ = dataloaders.PACKAGINGDataset(path=path_dataset_)
+    print("Len Dataset : {}".format(len(packaging_)))
 
+    dataloader_ = DataLoader(packaging_, batch_size=8, shuffle=True)
     dataloaders_ = [{
         'name' : 'Packaging',
         'loader' : dataloader_

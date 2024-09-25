@@ -9,10 +9,6 @@ import numpy as np
 import cv2
 import PIL
 
-config_path = Path(__file__).resolve().parent / "cache"
-print("config_path " , config_path)
-
-
 def normalize_tensor(tensor, rescale=False):
     tmin = torch.min(tensor)
     if rescale or tmin < 0:
@@ -26,7 +22,7 @@ def normalize_tensor(tensor, rescale=False):
 
 class PACKAGINGDataset(Dataset):
 
-    n_train_val_images = 49
+    n_train_val_images = 64
     dynamic = False
 
     def __init__(self, path , phase='train', subset=None, verbose=1,
