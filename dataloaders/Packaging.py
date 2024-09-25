@@ -24,9 +24,8 @@ def normalize_tensor(tensor, rescale=False):
     tensor.fill_(1. / tensor.numel())
     return tensor
 
-class MIT1003Dataset(Dataset):
+class PACKAGINGDataset(Dataset):
 
-    name = 'MIT1003'
     n_train_val_images = 49
     dynamic = False
 
@@ -213,7 +212,7 @@ class MIT1003Dataset(Dataset):
 
             all_image_files.append({
                 'img': img_file.name,
-                'map': img_file.stem + "_saillance_5s.jpg",  #A modifier en fonction de ce qui est mis dans la base de données
+                'map': img_file.stem + "_saillance.jpg",  #A modifier en fonction de ce qui est mis dans la base de données
                 'pts': img_file.stem + "_fixPts.jpg",#A modifier en fonction de ce qui est mis dans la base de données
             })
 

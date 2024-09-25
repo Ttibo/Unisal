@@ -381,9 +381,9 @@ if __name__ == "__main__":
     # move model to device
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
-    mit1003_ = dataloaders.MIT1003Dataset(path="/Users/thibaultlelong/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_15/")
+    packaging_ = dataloaders.PACKAGINGDataset(path="/Users/thibaultlelong/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_15/")
 
-    dataloader_ = DataLoader(mit1003_, batch_size=6, shuffle=True)
+    dataloader_ = DataLoader(packaging_, batch_size=6, shuffle=True)
 
     dataloaders_ = [{
         'name' : 'Packaging',
@@ -391,5 +391,5 @@ if __name__ == "__main__":
     },
     ]
 
-    trainer_ = Trainer(dataloaders = dataloaders_ ,  device = DEFAULT_DEVICE , model = unisal_ , path = "./weights/packging_5s/" )
+    trainer_ = Trainer(dataloaders = dataloaders_ ,  device = DEFAULT_DEVICE , model = unisal_ , path = "./weights/packging_3s/" )
     trainer_.fit()
