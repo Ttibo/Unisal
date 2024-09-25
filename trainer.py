@@ -382,7 +382,7 @@ if __name__ == "__main__":
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
 
-    path_dataset_ = 'C:/Users/Shadow/Documents/Dataset/Packaging_delta_5_sigma_20/'
+    path_dataset_ = 'C:/Users/Shadow/Documents/Dataset/Packaging_delta_1_sigma_20/'
     packaging_ = dataloaders.PACKAGINGDataset(path=path_dataset_)
     print("Len Dataset : {}".format(len(packaging_)))
 
@@ -393,5 +393,5 @@ if __name__ == "__main__":
     },
     ]
 
-    trainer_ = Trainer(dataloaders = dataloaders_ ,  device = DEFAULT_DEVICE , model = unisal_ , path = "./weights/packging_5s/" )
+    trainer_ = Trainer(dataloaders = dataloaders_ ,  device = DEFAULT_DEVICE , model = unisal_ , path = "./weights/packging_1s/" )
     trainer_.fit()
