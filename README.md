@@ -8,9 +8,9 @@ Implementation simplifié du modèle UNISAL pour la saillance, en utilisant PyTo
 - [Installation](#installation)
 - [Utilisation](#utilisation)
 - [Arguments](#arguments)
+- [Bases de données](#Bases-de-données)
 - [Exemple d'utilisation](#exemple-dutilisation)
 - [Contributions](#contributions)
-- [License](#license)
 
 ## Fonctionnalités
 
