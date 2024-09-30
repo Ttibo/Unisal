@@ -1,6 +1,6 @@
 # Trainer for UNISAL Model
 
-Ce projet implémente un entraînement simplifié du modèle UNISAL pour la segmentation d'images, en utilisant PyTorch. Ce code inclut les fonctionnalités de formation et de validation, ainsi que la gestion des checkpoints.
+Implementation simplifié du modèle UNISAL pour la saillance, en utilisant PyTorch. Ce code inclut les fonctionnalités de formation et de validation, ainsi que la gestion des checkpoints.
 
 ## Table des matières
 
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ```
 
 ### Dépendances
-
+- Python 3.11.9
 - PyTorch
 - OpenCV
 - Matplotlib
@@ -78,6 +78,9 @@ python trainer.py --num_epochs 50 --optim_algo Adam --lr 0.001 --path_save ./out
 
 Les contributions sont les bienvenues ! Veuillez soumettre une demande de tirage (pull request) ou ouvrir une issue pour discuter des améliorations potentielles.
 
-## License
 
-Ce projet est sous la licence MIT. Veuillez consulter le fichier `LICENSE` pour plus de détails.
+# TODO 
+- [ ] Gestion dataloaser train/val 
+- [ ] Clean class
+- [ ] Modification modèle encoder
+- [ ] Entrainement et dataloaders video
