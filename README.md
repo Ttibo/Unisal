@@ -71,9 +71,9 @@ Voici les arguments que vous pouvez utiliser pour personnaliser l'entraînement 
 ## Bases de données
 Structure donnes pour entrainement
 
-- x : Un tenseur contenant les images d'entrée (format : [batch_size, channels, height, width])
-- sal : Un tenseur contenant les cartes de salience correspondantes (format : [batch_size, channels, height, width])
-- fix : Un tenseur contenant les points de fixation (format : [batch_size, channels, height, width])
+- image : Un tenseur contenant les images d'entrée (format : [batch_size, channels, height, width])
+- saliency : Un tenseur contenant les cartes de salience correspondantes (format : [batch_size, channels, height, width])
+- fixation : Un tenseur contenant les points de fixation (format : [batch_size, channels, height, width])
 - target_size : La taille cible des images, utilisée pour le redimensionnement
 
 ![Exemple 1](ressources/exemple_1.png)
