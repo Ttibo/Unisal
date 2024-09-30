@@ -18,6 +18,7 @@ Implementation simplifié du modèle UNISAL pour la saillance, en utilisant PyTo
 - Prise en charge de l'entraînement et de la validation.
 - Sauvegarde des checkpoints à intervalles réguliers.
 - Personnalisation des hyperparamètres via les arguments de ligne de commande.
+- Export Onnx model
 
 ## Installation
 
