@@ -19,16 +19,6 @@ elif torch.backends.mps.is_available():
 else:
     DEFAULT_DEVICE = torch.device("cpu")
 
-
-def image_inference(img , model , device):
-    model_ = model.to(device)
-    img_ = img.to(device).unsqueeze(0).unsqueeze(0)
-
-    print(img_.shape)
-    map_ = model_(img_)
-
-    return map_.squeeze(0).squeeze(0).cpu().detach()
-
 class Trainer():
     def __init__(
         self,
@@ -75,7 +65,6 @@ class Trainer():
         self.train_cnn_after = 0
         self.cnn_eval = True
         self.loss_weights = (1,-0.1 , -0.1)
-        self.all_scalars = {}
 
         self.train_dir = Path(path)
         if os.path.exists(path) == False:
@@ -121,9 +110,6 @@ class Trainer():
 
             self.epoch += 1
 
-        # self.export_scalars()
-        # return best_val, best_epoch
-
     def fit_phase(self):
         """
         Run the current phase (training or validation)
@@ -135,24 +121,6 @@ class Trainer():
             src['name']: [0.0 for _ in self.loss_weights] for src in self.dataloaders
         }
         n_samples = {src['name']: 0 for src in self.dataloaders}
-
-        # # Shuffle the dataset batches
-        # dataloaders = {src: self.get_dataloader(self.phase, src) for src in self.dataloaders}
-        # all_batches = [
-        #     src
-        #     for src in chain.from_iterable(
-        #         zip_longest(
-        #             *[[src for _ in range(len(dataloaders[src]))] for src in self.dataloaders]
-        #         )
-        #     )
-        #     if src is not None
-        # ]
-        # if self.shuffle_datasets:
-        #     shuffle(all_batches)
-        # if self.epoch == 0:
-        #     print(f"Number of batches: {len(all_batches)}")
-        #     print(", ".join(f"{src}: {len(dataloaders[src])}" for src in self.dataloaders))
-
         # Set model train/eval mode
         self.model.train(self.phase == "train")
 
@@ -370,7 +338,37 @@ class Trainer():
 
 
 
+import argparse
+
 if __name__ == "__main__":
+
+    # Créez un parser d'arguments
+    parser = argparse.ArgumentParser(description='Trainer for the model.')
+
+    # Ajoutez les arguments pour le Trainer
+    parser.add_argument('--num_epochs', type=int, default=100, help='Nombre d\'époques pour l\'entraînement.')
+    parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
+    parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
+    parser.add_argument('--lr', type=float, default=0.04, help='Taux d\'apprentissage.')
+    parser.add_argument('--lr_scheduler', type=str, default="ExponentialLR", help='Type de planificateur de taux d\'apprentissage.')
+    parser.add_argument('--lr_gamma', type=float, default=0.99, help='Facteur gamma pour le planificateur de taux d\'apprentissage.')
+    parser.add_argument('--weight_decay', type=float, default=1e-4, help='Poids de décroissance pour l\'optimiseur.')
+    parser.add_argument('--cnn_weight_decay', type=float, default=1e-5, help='Poids de décroissance pour le CNN.')
+    parser.add_argument('--grad_clip', type=float, default=2.0, help='Valeur de coupure de gradient.')
+    parser.add_argument('--cnn_lr_factor', type=float, default=0.1, help='Facteur de taux d\'apprentissage pour le CNN.')
+    parser.add_argument('--loss_metrics', type=str, nargs='+', default=["kld", "nss", "cc"], help='Métriques de perte à utiliser.')
+    parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
+    parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
+    parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
+    parser.add_argument('--path_save', type=str, default="./weights/packging_1s/" , help='path save output')
+    parser.add_argument('--path_dataset', type=str, default="C:/Users/Shadow/Documents/Dataset/Packaging_delta_1_sigma_20/" , help='path dataset')
+
+
+
+    # Analysez les arguments
+    args = parser.parse_args()
+
+
     # create model Unisal
     unisal_ = model.UNISAL(bypass_rnn=True)
 
@@ -382,8 +380,7 @@ if __name__ == "__main__":
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
 
-    path_dataset_ = 'C:/Users/Shadow/Documents/Dataset/Packaging_delta_1_sigma_20/'
-    packaging_ = dataloaders.PACKAGINGDataset(path=path_dataset_)
+    packaging_ = dataloaders.PACKAGINGDataset(path=args.path_dataset)
     print("Len Dataset : {}".format(len(packaging_)))
 
     dataloader_ = DataLoader(packaging_, batch_size=8, shuffle=True)
@@ -393,5 +390,28 @@ if __name__ == "__main__":
     },
     ]
 
-    trainer_ = Trainer(dataloaders = dataloaders_ ,  device = DEFAULT_DEVICE , model = unisal_ , path = "./weights/packging_1s/" )
-    trainer_.fit()
+
+    # Instanciez le Trainer avec les arguments
+    trainer = Trainer(
+        dataloaders=dataloaders_,  # Remplacez ceci par vos dataloaders
+        device=DEFAULT_DEVICE,  # Ou tout autre dispositif
+        model=unisal_,  # Remplacez ceci par votre modèle
+        path=args.path_save,  # Remplacez ceci par le chemin vers les points de contrôle
+        num_epochs=args.num_epochs,
+        optim_algo=args.optim_algo,
+        momentum=args.momentum,
+        lr=args.lr,
+        lr_scheduler=args.lr_scheduler,
+        lr_gamma=args.lr_gamma,
+        weight_decay=args.weight_decay,
+        cnn_weight_decay=args.cnn_weight_decay,
+        grad_clip=args.grad_clip,
+        cnn_lr_factor=args.cnn_lr_factor,
+        loss_metrics=args.loss_metrics,
+        loss_weights=args.loss_weights,
+        chkpnt_warmup=args.chkpnt_warmup,
+        chkpnt_epochs=args.chkpnt_epochs,
+    )
+
+    trainer.fit()
+

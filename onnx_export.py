@@ -162,7 +162,7 @@ if __name__ == "__main__":
         example_input,                # Entrée factice
         onnx_file_path,               # Nom du fichier de sortie
         export_params=True,           # Exporter aussi les paramètres du modèle
-        opset_version=11,             # Version de l'IR (ONNX 11 est compatible avec la plupart des frameworks)
+        opset_version=12,             # Version de l'IR (ONNX 11 est compatible avec la plupart des frameworks)
         do_constant_folding=True,     # Activer ou désactiver le repliement constant
         input_names=['input'],        # Nom des entrées
         output_names=['output'],      # Nom des sorties
