@@ -66,6 +66,20 @@ Voici les arguments que vous pouvez utiliser pour personnaliser l'entraînement 
 | `--chkpnt_epochs`     | `int`    | Nombre d'époques pour sauvegarder le point de contrôle. | `2`                  |
 | `--path_save`         | `str`    | Chemin pour sauvegarder les poids du modèle.      | `./weights/packging_1s/`   |
 
+
+## Bases de données
+Structure donnes pour entrainement
+
+- x : Un tenseur contenant les images d'entrée (format : [batch_size, channels, height, width])
+- sal : Un tenseur contenant les cartes de salience correspondantes (format : [batch_size, channels, height, width])
+- fix : Un tenseur contenant les points de fixation (format : [batch_size, channels, height, width])
+- target_size : La taille cible des images, utilisée pour le redimensionnement
+
+![Exemple 1](ressources/exemple_1.png)
+![Exemple 2](ressources/exemple_2.png)
+
+
+
 ## Exemple d'utilisation
 
 Voici un exemple d'utilisation :
