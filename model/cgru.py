@@ -165,7 +165,9 @@ class ConvGRUCell(nn.Module):
     def forward(self, x, h_tm1):
         # Initialize hidden state if necessary
         if h_tm1 is None:
-            h_tm1 = self._init_hidden(x, cuda=x.is_cuda)
+            # h_tm1 = self._init_hidden(x, cuda=x.is_cuda)
+            h_tm1 = self._init_hidden(x, device=x.device)
+
 
         # Compute gate components
         r_x = self.w_r(self.apply_dropout(x, 0, 0))
@@ -217,29 +219,32 @@ class ConvGRUCell(nn.Module):
     def mask_name(idx):
         return "drop_mask_{}".format(idx)
 
-    def set_drop_masks(self):
+    def set_drop_masks(self,device = 'cpu'):
         """Set the dropout masks for the current sequence"""
-        for idx, mask in self.yield_drop_masks():
+        for idx, mask in self.yield_drop_masks(device=device):
             setattr(self, self.mask_name(idx), mask)
 
-    def yield_drop_masks(self):
+    def yield_drop_masks(self, device = 'cpu'):
         """Iterator over recurrent dropout masks"""
         n_masks = (3, 3, 1)
         n_channels = (self.input_ch, self.hidden_ch, self.hidden_ch)
         for idx, p in enumerate(self.drop_prob):
             if p > 0:
-                yield (idx, self.generate_do_mask(p, n_masks[idx], n_channels[idx]))
+                yield (idx, self.generate_do_mask(p, n_masks[idx], n_channels[idx], device))
 
     @staticmethod
-    def generate_do_mask(p, n, ch):
+    def generate_do_mask(p, n, ch, device = 'cpu'):
         """Generate a dropout mask for recurrent dropout"""
         with torch.no_grad():
             mask = Bernoulli(torch.full((n, ch), 1 - p)).sample() / (1 - p)
             mask = (
-                mask.requires_grad_(False).cuda()
-                if torch.cuda.is_available()
-                else mask.requires_grad_(False).cpu()
+
+                mask.requires_grad_(False).to(torch.device(device))
+                # if torch.cuda.is_available()
+                # else mask.requires_grad_(False).cpu()
+
             )
+
             return mask
 
     def apply_dropout(self, x, idx, sub_idx):
@@ -301,12 +306,12 @@ class ConvGRUCell(nn.Module):
                 )
             )
 
-    def _init_hidden(self, input_, cuda=True):
+    def _init_hidden(self, input_, device = None):
         """Initialize the hidden state"""
         batch_size, _, height, width = input_.data.size()
         prev_state = torch.zeros(batch_size, self.hidden_ch, height, width)
-        if cuda:
-            prev_state = prev_state.cuda()
+        if device:
+            prev_state = prev_state.to(torch.device(device))
         return prev_state
 
 
@@ -398,13 +403,15 @@ class ConvGRU(nn.Module):
 
         for t, x in enumerate(iterator):
             for layer_idx in range(self.num_layers):
+
                 if self.cell_list[layer_idx].do_mode == "recurrent" and t == 0:
-                    self.cell_list[layer_idx].set_drop_masks()
+                    self.cell_list[layer_idx].set_drop_masks(input_tensor.device)
+                
                 (x, h) = self.cell_list[layer_idx](x, hidden[layer_idx])
                 hidden[layer_idx] = h.clone()
             outputs.append(x.clone())
         outputs = torch.stack(outputs, dim=1)
-
+        
         return outputs, hidden
 
     @staticmethod

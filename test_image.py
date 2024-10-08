@@ -89,15 +89,13 @@ class Saliency:
         img_ , size_ = dataloaders.open_image(pathImage)
         map_ = self.image_inference(img_ )
 
-        print('Pytorch ' , map_.shape)
-        
         smap = np.exp(map_)
         smap = np.squeeze(smap)
         smap = smap
         map_ = (smap / np.amax(smap) * 255).astype(np.uint8)
         map_ = cv2.resize(map_ , (img.shape[1] , img.shape[0]))
         
-        predicted_colored = cv2.cvtColor(map_.astype(np.uint8) , cv2.COLORMAP_JET)
+        predicted_colored = cv2.applyColorMap(map_.astype(np.uint8) , cv2.COLORMAP_JET)
         res_ = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.3, cv2.cvtColor(predicted_colored, cv2.COLOR_BGR2RGB), 0.7, 0.0)
 
         self.show_maps(img , map_ , res_)
