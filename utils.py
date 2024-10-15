@@ -125,8 +125,10 @@ def nss(pred, fixations):
     results = []
     for this_pred_normed, mask in zip(torch.unbind(pred_normed, 0),
                                       torch.unbind(fixations, 0)):
+
+        # print(mask.shape)
         if mask.sum() == 0:
-            print("No fixations.")
+            # print("No fixations.")
             results.append(torch.ones([]).float().to(fixations.device))
             continue
         nss_ = torch.masked_select(this_pred_normed, mask)

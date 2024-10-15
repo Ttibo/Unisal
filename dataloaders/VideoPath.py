@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import PIL
 import torch
+from tqdm import tqdm
 
 class VideoPath:
 
@@ -65,18 +66,20 @@ class VideoPath:
 
         # Lire la vidéo frame par frame
         frame_index = 0
-        while cap.isOpened():
-            # Calculer l'index de la prochaine frame à lire
-            frame_index += fps_ratio
+        total_frames = 100
+        with tqdm(total=total_frames, desc="Traitement des frames", unit="frame") as pbar:
+            while cap.isOpened():
+                # Calculer l'index de la prochaine frame à lire
+                frame_index += fps_ratio
 
-            # Aller à la frame correspondante
-            cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_index))
+                # Aller à la frame correspondante
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_index))
 
-            ret, frame = cap.read()  # Lire la frame sélectionnée
-            if not ret:
-                print("Fin de la vidéo ou erreur de lecture")
-                break
-            self.frames.append(frame)
+                ret, frame = cap.read()  # Lire la frame sélectionnée
+                if not ret:
+                    print("Fin de la vidéo ou erreur de lecture")
+                    break
+                self.frames.append(frame)
 
         print(f"Number Frames -> {len(self.frames)}")
         self.frame_index = 0

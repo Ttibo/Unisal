@@ -16,30 +16,31 @@ else:
     DEFAULT_DEVICE = torch.device("cpu")
 
 if __name__ == "__main__":
-    file_ = "/Users/thibaultlelong/Documents/Dataset/GenSaliency/test/video_0/ff1.mp4"
+    # open model
+    model_path = "/weights/packging_3s/weights_best.pth"
+    model_path = "/weights/video_test/weights_best.pth"
+
+    path_ = os.path.dirname(os.path.abspath(__file__))
+    model = model.UNISAL(bypass_rnn=False)
+    model.load_weights(path_ + model_path)
+    model.to(DEFAULT_DEVICE)
+    print(f"Device {DEFAULT_DEVICE}")
+
+    frames_predic = []
+
+
+    file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/video_0/ff.mp4"
+    # file_ = "/Users/coconut/Documents/Video/Building makemore Part 2 MLP.mp4"
     videopath = VideoPath()
     videopath.open_video(
         file = file_ , 
         fps = 15
     )
 
-    # open model
-    model_path = "/weights/packging_3s/weights_best.pth"
-    path_ = os.path.dirname(os.path.abspath(__file__))
-    model = model.UNISAL(bypass_rnn=False)
-    model.load_weights(path_ + model_path)
-    model.to(DEFAULT_DEVICE)
 
-    for param in model.parameters():
-        if param.device != DEFAULT_DEVICE:
-            print(f"Erreur : Le paramètre {param} n'est pas sur le bon device : {param.device}")
-    print("Tous les paramètres sont sur le bon device")
-
-    frames_predic = []
 
     # hidden state for RNN video
-    size_package = 2
-    # h0 = torch.Tensor([None]).to(DEFAULT_DEVICE)
+    size_package = 4
     h0 = [None]
     total_frames = len(videopath.frames) 
     with tqdm(total=total_frames, desc="Traitement des frames", unit="frame") as pbar:
@@ -62,8 +63,6 @@ if __name__ == "__main__":
             for i in range(0 , this_pred_seq.shape[0]):
                 frames_predic.append(this_pred_seq[i])
             
-
-    
     for i in range(0 , len(frames_predic)):
 
         map_ = frames_predic[i]
@@ -79,8 +78,6 @@ if __name__ == "__main__":
         res_ = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.4, cv2.cvtColor(predicted_colored, cv2.COLOR_BGR2RGB), 0.7, 0.0)
 
         cv2.imshow("res" , res_)
-        cv2.waitKey()
 
-
-
-
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            break

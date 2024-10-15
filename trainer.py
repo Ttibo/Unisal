@@ -8,6 +8,8 @@ import numpy as np
 from pathlib import Path
 from torch.utils.data import Dataset, DataLoader
 from itertools import chain
+from tqdm import tqdm
+
 
 import utils
 import torch
@@ -61,7 +63,7 @@ class Trainer():
         self.chkpnt_warmup = chkpnt_warmup
         self.chkpnt_epochs = chkpnt_epochs
 
-        self.phases = ("train", "valid")
+        self.phases = ("train", "val")
         self.train_cnn_after = 0
         self.cnn_eval = True
         self.loss_weights = (1,-0.1 , -0.1)
@@ -133,19 +135,22 @@ class Trainer():
                 self.model.cnn.eval()
 
         for idx , loader in enumerate(self.dataloaders):
-            for ix_ , sample in enumerate(loader['loader']):
 
-                loss, loss_summands, batch_size = self.fit_sample(
-                    sample,
-                    grad_clip=self.grad_clip
-                )
+            with tqdm(total=len(loader['loader'][self.phase]), desc="Batch processing", unit="Batch") as pbar:
+                for ix_ , sample in enumerate(loader['loader'][self.phase]):
 
-                running_losses[loader['name']] += loss * batch_size
-                running_loss_summands[loader['name']] = [
-                    r + l * batch_size
-                    for r, l in zip(running_loss_summands[loader['name']], loss_summands)
-                ]
-                n_samples[loader['name']] += batch_size
+                    loss, loss_summands, batch_size = self.fit_sample(
+                        sample,
+                        grad_clip=self.grad_clip
+                    )
+
+                    running_losses[loader['name']] += loss * batch_size
+                    running_loss_summands[loader['name']] = [
+                        r + l * batch_size
+                        for r, l in zip(running_loss_summands[loader['name']], loss_summands)
+                    ]
+                    n_samples[loader['name']] += batch_size
+                    pbar.update(1)
 
 
         for idx , loader in enumerate(self.dataloaders):
@@ -164,7 +169,7 @@ class Trainer():
 
 
             if (
-                self.phase == "valid"
+                self.phase == "val"
                 and self.epoch >= self.chkpnt_warmup
             ):
                 val_score = -phase_loss
@@ -186,7 +191,7 @@ class Trainer():
         """
 
         with torch.set_grad_enabled(self.phase == "train"):
-            x, sal, fix, target_size = sample
+            x, sal, fix, _ = sample
 
             # Add temporal dimension to image data
             if x.dim() == 4:
@@ -198,6 +203,7 @@ class Trainer():
             fix = fix.to(self.device)
 
             if self.phase == "train":
+
                 # Switch the RNN gradients off if this is a image batch
                 rnn_grad = x.shape[1] != 1 or not self.model.bypass_rnn
                 for param in chain(
@@ -212,9 +218,10 @@ class Trainer():
                     param.requires_grad = True
 
             # Run forward pass
-            pred_seq = self.model(x, target_size = target_size)
+            pred_seq = self.model(x)
             # pred_seq = self.model(x)
 
+            # print("fix shape : " , fix.shape)
             # Compute the total loss
             loss_summands = self.loss_sequences(
                 pred_seq, sal, fix, metrics=self.loss_metrics
@@ -360,34 +367,46 @@ if __name__ == "__main__":
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/packging_1s/" , help='path save output')
+    parser.add_argument('--path_save', type=str, default="./weights/video_test/" , help='path save output')
     parser.add_argument('--path_dataset', type=str, default="C:/Users/Shadow/Documents/Dataset/Packaging_delta_1_sigma_20/" , help='path dataset')
-
-
 
     # Analysez les arguments
     args = parser.parse_args()
 
-
     # create model Unisal
-    unisal_ = model.UNISAL(bypass_rnn=True)
+    unisal_ = model.UNISAL(bypass_rnn=False)
 
     # load model from github and res
     directory_ = "./weights/weights_best.pth"
     unisal_.load_weights(directory_ )
-
     # move model to device
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
 
-    packaging_ = dataloaders.PACKAGINGDataset(path=args.path_dataset)
-    print("Len Dataset : {}".format(len(packaging_)))
+    packaging_train = dataloaders.PACKAGINGDataset(path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/" + "/train/")
+    packaging_val = dataloaders.PACKAGINGDataset(path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/" + "/val/")
 
-    dataloader_ = DataLoader(packaging_, batch_size=8, shuffle=True)
-    dataloaders_ = [{
+    video_train = dataloaders.VideoDataset(path= "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ittention_videos/" + "/train/", N = 12)
+    video_val = dataloaders.VideoDataset(path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ittention_videos/" + "/val/", N=12)
+
+    # print("Len Dataset : {}".format(len(packaging_)))
+
+    dataloaders_ = [
+    {
         'name' : 'Packaging',
-        'loader' : dataloader_
+        'loader' : {
+            'train' : DataLoader(packaging_train, batch_size=10, shuffle=True),
+            'val' : DataLoader(packaging_val, batch_size=10, shuffle=True)
+        }
     },
+    {
+        'name' : 'Video',
+        'loader' : {
+            'train' : DataLoader(video_train, batch_size=4, shuffle=True),
+            'val' : DataLoader(video_val, batch_size=4, shuffle=True)
+        }
+
+    }
     ]
 
 
