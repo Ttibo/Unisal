@@ -1,3 +1,7 @@
+import sys
+sys.path.append("./")
+sys.path.append("../")
+
 import os
 import cv2
 import matplotlib.pyplot as plt
@@ -20,15 +24,14 @@ if __name__ == "__main__":
     model_path = "/weights/packging_3s/weights_best.pth"
     model_path = "/weights/video_test/weights_best.pth"
     model_path = "/weights/weights_best.pth"
+    model_path = "../weights/Train_packging_advertising/weights_best.pth"
 
     path_ = os.path.dirname(os.path.abspath(__file__))
     model = model.UNISAL(bypass_rnn=False)
-    model.load_weights(path_ + model_path)
+    model.load_weights( model_path)
     model.to(DEFAULT_DEVICE)
     print(f"Device {DEFAULT_DEVICE}")
-
     frames_predic = []
-
 
     file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/video_0/ff.mp4"
     # file_ = "/Users/coconut/Documents/Video/Building makemore Part 2 MLP.mp4"
@@ -37,7 +40,6 @@ if __name__ == "__main__":
         file = file_ , 
         fps = 15
     )
-
 
 
     # hidden state for RNN video
@@ -63,6 +65,8 @@ if __name__ == "__main__":
             this_pred_seq = this_pred_seq.squeeze(0).detach().cpu().numpy()
             for i in range(0 , this_pred_seq.shape[0]):
                 frames_predic.append(this_pred_seq[i])
+
+            pbar.update(1)
             
     for i in range(0 , len(frames_predic)):
 

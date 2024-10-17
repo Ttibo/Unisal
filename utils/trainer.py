@@ -170,16 +170,17 @@ class Trainer():
 
             loss_global_ += phase_loss
         loss_global_ /= len(self.dataloaders)
+        print(f"GLOBAl LOSS {loss_global_}")
 
         if (
             self.phase == "val"
-            and self.epoch >= self.chkpnt_warmup
+            # and self.epoch >= self.chkpnt_warmup
         ):
             val_score = -loss_global_
             if self.best_val_score is None:
                 self.best_val_score = val_score
             elif val_score > self.best_val_score:
-                print(f"UPADTE BEST WEIGHTS {loss_global_}")
+                print("      - UPADTE BEST WEIGHTS")
                 self.best_val_score = val_score
                 self.model.save_weights(self.train_dir, "best")
                 with open(self.train_dir / "best_epoch.dat", "w") as f:

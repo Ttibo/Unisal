@@ -1,11 +1,16 @@
+import sys
+sys.path.append("./")
+sys.path.append("../")
+
 import os
 import cv2
-import matplotlib.pyplot as plt
-import model
-import numpy as np
 import torch
-import dataloaders
+import numpy as np
 import onnxruntime as ort  # Utilisation d'ONNX Runtime
+import matplotlib.pyplot as plt
+
+import model
+import dataloaders
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -30,11 +35,11 @@ class Saliency:
         self.model = model.UNISAL(bypass_rnn=True)
 
         print("PathModel " , pathModel)
-        self.model.load_weights(self.path_ + pathModel)
+        self.model.load_weights(pathModel)
         self.model.to(DEFAULT_DEVICE)
 
         # Charger le modèle ONNX avec ONNX Runtime
-        self.session = ort.InferenceSession(self.path_ + pathModelOnnx, providers=[DEFAULT_DEVICE_ONNX])
+        # self.session = ort.InferenceSession(self.path_ + pathModelOnnx, providers=[DEFAULT_DEVICE_ONNX])
 
 
     def normalize(self , image : np.ndarray ) -> np.ndarray: 
@@ -118,10 +123,7 @@ class Saliency:
 
 if __name__ == "__main__":
     file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/image_1.jpg"
-    saliency_ = Saliency(pathModelOnnx="/weights/packging_3s/unisal_model.onnx" , pathModel = "/weights/packging_3s/weights_best.pth")
+    saliency_ = Saliency(pathModelOnnx="/weights/packging_3s/unisal_model.onnx" , pathModel = "/weights/Train_packging_advertising/weights_best.pth")
     saliency_.run(file_)
-
-    # Exécuter le modèle sur une image donnée
-    saliency_.runOnnx(file_)
 
     plt.show()

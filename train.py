@@ -78,8 +78,8 @@ if __name__ == "__main__":
         })
 
     if args.path_dataset_video is not None:
-        video_train = dataloaders.VideoDataset(path=args.path_dataset_video  + "/train/", N = 12)
-        video_val = dataloaders.VideoDataset(path=args.path_dataset_video + "/val/", N=12)
+        video_train = dataloaders.VideoDatasetV2(path=args.path_dataset_video  + "/train/", N = 12)
+        video_val = dataloaders.VideoDatasetV2(path=args.path_dataset_video + "/val/", N=12)
         dataloaders_.append(
             {
                 'name' : 'Video',
