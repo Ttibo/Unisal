@@ -152,6 +152,8 @@ class Trainer():
 
                     pbar.update(1)
 
+
+        loss_global_ = 0.
         for idx , loader in enumerate(self.dataloaders):
             phase_loss = running_losses[loader['name']] / n_samples[loader['name']]
             phase_loss_summands = [
@@ -166,22 +168,24 @@ class Trainer():
                 )
             )
 
+            loss_global_ += phase_loss
+        loss_global_ /= len(self.dataloaders)
 
-            if (
-                self.phase == "val"
-                and self.epoch >= self.chkpnt_warmup
-            ):
-                val_score = -phase_loss
-                if self.best_val_score is None:
-                    self.best_val_score = val_score
-                elif val_score > self.best_val_score:
-                    print("UPADTE BEST WEIGHTS")
-                    self.best_val_score = val_score
-                    self.model.save_weights(self.train_dir, "best")
-                    with open(self.train_dir / "best_epoch.dat", "w") as f:
-                        f.write(str(self.epoch))
-                    with open(self.train_dir / "best_val_loss.dat", "w") as f:
-                        f.write(str(val_score))
+        if (
+            self.phase == "val"
+            and self.epoch >= self.chkpnt_warmup
+        ):
+            val_score = -loss_global_
+            if self.best_val_score is None:
+                self.best_val_score = val_score
+            elif val_score > self.best_val_score:
+                print("UPADTE BEST WEIGHTS")
+                self.best_val_score = val_score
+                self.model.save_weights(self.train_dir, "best")
+                with open(self.train_dir / "best_epoch.dat", "w") as f:
+                    f.write(str(self.epoch))
+                with open(self.train_dir / "best_val_loss.dat", "w") as f:
+                    f.write(str(val_score))
 
 
     def fit_sample(self, sample, grad_clip=None):
