@@ -1,89 +1,87 @@
+
 # Trainer for UNISAL Model
 
-Implementation simplifié du modèle UNISAL pour la saillance, en utilisant PyTorch. Ce code inclut les fonctionnalités de formation et de validation, ainsi que la gestion des checkpoints.
+Simplified implementation of the UNISAL model for saliency using PyTorch. This code includes training and validation features, as well as checkpoint management.
 
-## Table des matières
+## Table of Contents
 
-- [Fonctionnalités](#fonctionnalités)
+- [Features](#features)
 - [Installation](#installation)
-- [Utilisation](#utilisation)
+- [Usage](#usage)
 - [Arguments](#arguments)
-- [Bases de données](#Bases-de-données)
-- [Exemple d'utilisation](#exemple-dutilisation)
+- [Databases](#databases)
+- [Example Usage](#example-usage)
 - [Contributions](#contributions)
 
-## Fonctionnalités
+## Features
 
-- Chargement et entraînement d'un modèle UNISAL.
-- Prise en charge de l'entraînement et de la validation.
-- Sauvegarde des checkpoints à intervalles réguliers.
-- Personnalisation des hyperparamètres via les arguments de ligne de commande.
-- Export Onnx model
+- Loading and training of a UNISAL model.
+- Support for training and validation.
+- Saving checkpoints at regular intervals.
+- Customizing hyperparameters via command-line arguments.
+- Export Onnx model.
 
 ## Installation
 
-Assurez-vous d'avoir Python et PyTorch installés sur votre système. Vous pouvez installer les dépendances nécessaires avec pip :
+Make sure you have Python and PyTorch installed on your system. You can install the required dependencies with pip:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Dépendances
+### Dependencies
 - Python 3.11.9
 - PyTorch
 - OpenCV
 - Matplotlib
 - NumPy
 
-## Utilisation
+## Usage
 
-Pour exécuter le script d'entraînement, utilisez la commande suivante dans le terminal :
+To run the training script, use the following command in the terminal:
 
 ```bash
 python trainer.py --num_epochs 100 --path_save ./weights/
 ```
 
-Vous pouvez ajuster les paramètres en fonction de vos besoins.
+You can adjust the parameters based on your needs.
 
 ## Arguments
 
-Voici les arguments que vous pouvez utiliser pour personnaliser l'entraînement :
+Here are the arguments you can use to customize the training:
 
-| Argument               | Type     | Description                                          | Valeur par défaut           |
+| Argument               | Type     | Description                                          | Default Value           |
 |-----------------------|----------|----------------------------------------------------|-----------------------------|
-| `--num_epochs`        | `int`    | Nombre d'époques pour l'entraînement.              | `100`                       |
-| `--optim_algo`        | `str`    | Algorithme d'optimisation.                         | `"SGD"`                     |
-| `--momentum`          | `float`  | Momentum pour l'optimiseur.                        | `0.9`                       |
-| `--lr`                | `float`  | Taux d'apprentissage.                              | `0.04`                      |
-| `--lr_scheduler`      | `str`    | Type de planificateur de taux d'apprentissage.     | `"ExponentialLR"`           |
-| `--lr_gamma`          | `float`  | Facteur gamma pour le planificateur de taux.      | `0.99`                      |
-| `--weight_decay`      | `float`  | Poids de décroissance pour l'optimiseur.          | `1e-4`                      |
-| `--cnn_weight_decay`  | `float`  | Poids de décroissance pour le CNN.                 | `1e-5`                      |
-| `--grad_clip`         | `float`  | Valeur de coupure de gradient.                     | `2.0`                       |
-| `--cnn_lr_factor`     | `float`  | Facteur de taux d'apprentissage pour le CNN.      | `0.1`                       |
-| `--loss_metrics`      | `str[]`  | Métriques de perte à utiliser.                     | `["kld", "nss", "cc"]`     |
-| `--loss_weights`      | `float[]`| Poids des métriques de perte.                      | `[1, -0.1, -0.1]`          |
-| `--chkpnt_warmup`     | `int`    | Époques de montée en température pour le point de contrôle. | `2`                  |
-| `--chkpnt_epochs`     | `int`    | Nombre d'époques pour sauvegarder le point de contrôle. | `2`                  |
-| `--path_save`         | `str`    | Chemin pour sauvegarder les poids du modèle.      | `./weights/packging_1s/`   |
+| `--num_epochs`        | `int`    | Number of epochs for training.                     | `100`                       |
+| `--optim_algo`        | `str`    | Optimization algorithm.                            | `"SGD"`                     |
+| `--momentum`          | `float`  | Momentum for the optimizer.                        | `0.9`                       |
+| `--cnn_weight_decay`  | `float`  | Weight decay for the CNN.                          | `1e-5`                      |
+| `--grad_clip`         | `float`  | Gradient clipping value.                           | `2.0`                       |
+| `--cnn_lr_factor`     | `float`  | Learning rate factor for the CNN.                  | `0.1`                       |
+| `--loss_metrics`      | `str[]`  | Loss metrics to use.                               | `["kld", "nss", "cc"]`     |
+| `--loss_weights`      | `float[]`| Weights of the loss metrics.                       | `[1, -0.1, -0.1]`          |
+| `--chkpnt_warmup`     | `int`    | Warmup epochs for checkpoint.                      | `2`                         |
+| `--chkpnt_epochs`     | `int`    | Number of epochs to save the checkpoint.           | `2`                         |
+| `--path_save`         | `str`    | Path to save the model weights.                    | `./weights/packging_1s/`    |
 
+## Databases
 
-## Bases de données
-Structure donnes pour entrainement
+Data structure for training:
 
-- image : Un tenseur contenant les images d'entrée (format : [batch_size, channels, height, width])
-- saliency : Un tenseur contenant les cartes de salience correspondantes (format : [batch_size, channels, height, width])
-- fixation : Un tenseur contenant les points de fixation (format : [batch_size, channels, height, width])
-- target_size : La taille cible des images, utilisée pour le redimensionnement
+- image: A tensor containing the input images (format: [batch_size, channels, height, width])
+- saliency: A tensor containing the corresponding saliency maps (format: [batch_size, channels, height, width])
+- fixation: A tensor containing the fixation points (format: [batch_size, channels, height, width])
+- target_size: The target size of the images, used for resizing.
+
 
 ![Exemple 1](ressources/exemple_1.png)
 ![Exemple 2](ressources/exemple_2.png)
 
 
 
-## Exemple d'utilisation
+## Example Usage
 
-Voici un exemple d'utilisation :
+Here’s an example of how to use it:
 
 ```bash
 python trainer.py --num_epochs 50 --optim_algo Adam --lr 0.001 --path_save ./output/
@@ -91,11 +89,10 @@ python trainer.py --num_epochs 50 --optim_algo Adam --lr 0.001 --path_save ./out
 
 ## Contributions
 
-Les contributions sont les bienvenues ! Veuillez soumettre une demande de tirage (pull request) ou ouvrir une issue pour discuter des améliorations potentielles.
+Contributions are welcome! Please submit a pull request or open an issue to discuss potential improvements.
 
-
-# TODO 
-- [x] Gestion dataloaser train/val 
+## TODO 
+- [x] Manage train/val dataloader
 - [x] Clean class
-- [ ] Modification modèle encoder
-- [x] Entrainement et dataloaders video
+- [ ] Modify encoder model
+- [x] Training and video dataloaders

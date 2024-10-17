@@ -9,9 +9,7 @@ from pathlib import Path
 from torch.utils.data import Dataset, DataLoader
 from itertools import chain
 from tqdm import tqdm
-
-
-import utils
+import utils.utils as utils
 import torch
 
 if torch.cuda.is_available():
@@ -20,8 +18,6 @@ elif torch.backends.mps.is_available():
     DEFAULT_DEVICE = torch.device("mps")
 else:
     DEFAULT_DEVICE = torch.device("cpu")
-
-
 
 class Trainer():
     def __init__(
@@ -345,5 +341,3 @@ class Trainer():
             else:
                 raise ValueError(f"Unknown scheduler {self.lr_scheduler}")
         return self._scheduler
-
-
