@@ -21,6 +21,8 @@ elif torch.backends.mps.is_available():
 else:
     DEFAULT_DEVICE = torch.device("cpu")
 
+
+
 class Trainer():
     def __init__(
         self,
@@ -43,6 +45,7 @@ class Trainer():
         loss_weights=(1, -0.1, -0.1),
         chkpnt_warmup=2,
         chkpnt_epochs=2,
+        train_cnn_after= 100,
 
     ):
         self.dataloaders = dataloaders
@@ -64,7 +67,7 @@ class Trainer():
         self.chkpnt_epochs = chkpnt_epochs
 
         self.phases = ("train", "val")
-        self.train_cnn_after = 0
+        self.train_cnn_after = train_cnn_after
         self.cnn_eval = True
         self.loss_weights = (1,-0.1 , -0.1)
 
@@ -134,7 +137,7 @@ class Trainer():
             if self.cnn_eval:
                 self.model.cnn.eval()
 
-        for idx , loader in enumerate(self.dataloaders):
+        for _ , loader in enumerate(self.dataloaders):
 
             with tqdm(total=len(loader['loader'][self.phase]), desc="Batch processing", unit="Batch") as pbar:
                 for ix_ , sample in enumerate(loader['loader'][self.phase]):
@@ -150,8 +153,8 @@ class Trainer():
                         for r, l in zip(running_loss_summands[loader['name']], loss_summands)
                     ]
                     n_samples[loader['name']] += batch_size
-                    pbar.update(1)
 
+                    pbar.update(1)
 
         for idx , loader in enumerate(self.dataloaders):
             phase_loss = running_losses[loader['name']] / n_samples[loader['name']]
@@ -162,8 +165,8 @@ class Trainer():
             print(
                 f"{loader['name']:9s}:   Phase: {self.phase}, loss: {phase_loss:.4f}, "
                 + ", ".join(
-                    f"loss_{idx}: {loss_:.4f}"
-                    for idx, loss_ in enumerate(phase_loss_summands)
+                    f"loss {idx}: {loss_:.4f}"
+                    for idx, loss_ in zip(self.loss_metrics, phase_loss_summands)
                 )
             )
 
@@ -226,6 +229,7 @@ class Trainer():
             loss_summands = self.loss_sequences(
                 pred_seq, sal, fix, metrics=self.loss_metrics
             )
+
             # print("loss_summands " , loss_summands)
             loss_summands = [l.mean(1).mean(0) for l in loss_summands]
             loss = sum(
@@ -353,7 +357,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Trainer for the model.')
 
     # Ajoutez les arguments pour le Trainer
-    parser.add_argument('--num_epochs', type=int, default=100, help='Nombre d\'époques pour l\'entraînement.')
+    parser.add_argument('--num_epochs', type=int, default=2, help='Nombre d\'époques pour l\'entraînement.')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
     parser.add_argument('--lr', type=float, default=0.04, help='Taux d\'apprentissage.')
@@ -361,6 +365,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr_gamma', type=float, default=0.99, help='Facteur gamma pour le planificateur de taux d\'apprentissage.')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Poids de décroissance pour l\'optimiseur.')
     parser.add_argument('--cnn_weight_decay', type=float, default=1e-5, help='Poids de décroissance pour le CNN.')
+    parser.add_argument('--train_cnn_after', type=int, default=100, help='Nombres epochs pour commencer à entrainer l encoder')
     parser.add_argument('--grad_clip', type=float, default=2.0, help='Valeur de coupure de gradient.')
     parser.add_argument('--cnn_lr_factor', type=float, default=0.1, help='Facteur de taux d\'apprentissage pour le CNN.')
     parser.add_argument('--loss_metrics', type=str, nargs='+', default=["kld", "nss", "cc"], help='Métriques de perte à utiliser.')
@@ -392,20 +397,19 @@ if __name__ == "__main__":
     # print("Len Dataset : {}".format(len(packaging_)))
 
     dataloaders_ = [
-    {
-        'name' : 'Packaging',
-        'loader' : {
-            'train' : DataLoader(packaging_train, batch_size=10, shuffle=True),
-            'val' : DataLoader(packaging_val, batch_size=10, shuffle=True)
-        }
-    },
+    # {
+    #     'name' : 'Packaging',
+    #     'loader' : {
+    #         'train' : DataLoader(packaging_train, batch_size=10, shuffle=True),
+    #         'val' : DataLoader(packaging_val, batch_size=10, shuffle=True)
+    #     }
+    # },
     {
         'name' : 'Video',
         'loader' : {
             'train' : DataLoader(video_train, batch_size=4, shuffle=True),
             'val' : DataLoader(video_val, batch_size=4, shuffle=True)
         }
-
     }
     ]
 
@@ -430,6 +434,7 @@ if __name__ == "__main__":
         loss_weights=args.loss_weights,
         chkpnt_warmup=args.chkpnt_warmup,
         chkpnt_epochs=args.chkpnt_epochs,
+        train_cnn_after=args.train_cnn_after
     )
 
     trainer.fit()

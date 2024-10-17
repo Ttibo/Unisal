@@ -46,7 +46,7 @@ class Saliency:
     def show_maps(self , img , colormap ,map):
         # Créer une figure avec 4 sous-graphiques
         fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-
+        
         # Afficher la première image
         axs[0].imshow(img)
         axs[0].set_title('Image 1')
@@ -62,16 +62,12 @@ class Saliency:
         axs[2].set_title('Map')
         axs[2].axis('off')
 
-        # Afficher le tout
-
     def runOnnx(self , pathImage : str ) -> np.ndarray:
 
         img = cv2.imread(str(pathImage))
         img_ , size_ = dataloaders.open_image(pathImage)
         map_ = self.image_inference_onnx(img_ )
 
-        print('Onnx ' , map_.shape)
-        
         smap = np.exp(map_)
         smap = np.squeeze(smap)
         smap = smap
@@ -121,7 +117,7 @@ class Saliency:
     
 
 if __name__ == "__main__":
-    file_ = "/Users/thibaultlelong/Documents/Dataset/GenSaliency/test/image_1.jpg"
+    file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/image_1.jpg"
     saliency_ = Saliency(pathModelOnnx="/weights/packging_3s/unisal_model.onnx" , pathModel = "/weights/packging_3s/weights_best.pth")
     saliency_.run(file_)
 
