@@ -94,5 +94,6 @@ Contributions are welcome! Please submit a pull request or open an issue to disc
 ## TODO 
 - [x] Manage train/val dataloader
 - [x] Clean class
-- [ ] Modify encoder model
 - [x] Training and video dataloaders
+- [ ] Evaluation model
+- [ ] Modify encoder model

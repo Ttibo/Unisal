@@ -222,7 +222,10 @@ class Trainer():
                     param.requires_grad = True
 
             # Run forward pass
-            pred_seq = self.model(x)
+            pred_seq = self.model(
+                x = x,
+                # source = "Hollywood"
+                )
             # pred_seq = self.model(x)
 
             # Compute the total loss

@@ -496,6 +496,10 @@ class UNISAL(BaseModel):
             if target_size[0].shape != 1:
                 target_size = [target_size[0][0] , target_size[1][0]]
 
+
+        if x.shape[0] != 1:
+            source = "Hollywood"
+
         # Set the current source for the domain-specific BatchNorm modules
         self.this_source = source
 
