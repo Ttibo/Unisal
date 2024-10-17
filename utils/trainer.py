@@ -179,7 +179,7 @@ class Trainer():
             if self.best_val_score is None:
                 self.best_val_score = val_score
             elif val_score > self.best_val_score:
-                print("UPADTE BEST WEIGHTS")
+                print(f"UPADTE BEST WEIGHTS {loss_global_}")
                 self.best_val_score = val_score
                 self.model.save_weights(self.train_dir, "best")
                 with open(self.train_dir / "best_epoch.dat", "w") as f:
