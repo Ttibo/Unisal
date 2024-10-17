@@ -25,8 +25,9 @@ def normalize_tensor(tensor, rescale=False):
     return tensor / tsum if tsum > 0 else tensor.fill_(1. / tensor.numel())
 
 class VideoDatasetV2(Dataset):
-    def __init__(self, path, N=4, verbose=1, preproc_cfg=None):
+    def __init__(self, path, N=4, skip = 2, verbose=1, preproc_cfg=None):
         self.verbose = verbose
+        self.skip = skip
         self.preproc_cfg = {
             'rgb_mean': (0.485, 0.456, 0.406),
             'rgb_std': (0.229, 0.224, 0.225),
@@ -91,7 +92,7 @@ class VideoDatasetV2(Dataset):
         count = 0
         for fra , sal , fix in zip(frames ,saliency_maps, fixation_maps):
             count += 1
-            if count < 3:
+            if count < self.skip:
                 continue
 
             count = 0
