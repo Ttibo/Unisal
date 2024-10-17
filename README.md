@@ -95,7 +95,7 @@ Les contributions sont les bienvenues ! Veuillez soumettre une demande de tirage
 
 
 # TODO 
-- [ ] Gestion dataloaser train/val 
-- [ ] Clean class
+- [x] Gestion dataloaser train/val 
+- [x] Clean class
 - [ ] Modification modèle encoder
-- [ ] Entrainement et dataloaders video
+- [x] Entrainement et dataloaders video

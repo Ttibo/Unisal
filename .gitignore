@@ -1,5 +1,6 @@
 # ignore checkpoints
 weights/*/checkpoints/
+weights/*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

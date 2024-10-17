@@ -19,6 +19,7 @@ if __name__ == "__main__":
     # open model
     model_path = "/weights/packging_3s/weights_best.pth"
     model_path = "/weights/video_test/weights_best.pth"
+    model_path = "/weights/weights_best.pth"
 
     path_ = os.path.dirname(os.path.abspath(__file__))
     model = model.UNISAL(bypass_rnn=False)
