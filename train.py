@@ -46,11 +46,11 @@ if __name__ == "__main__":
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
     parser.add_argument('--path_save', type=str, default="./weights/video_test/" , help='path save output')
-    parser.add_argument('--path_dataset_image', type=str, default="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/" , help='path dataset')
-    parser.add_argument('--path_dataset_video', type=str, default="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ittention_videos/" , help='path dataset')
+    parser.add_argument('--path_dataset_image', type=str, default=None , help='path dataset')
+    parser.add_argument('--path_dataset_video', type=str, default=None , help='path dataset')
 
     # Analysez les arguments
-    args = parser.parse_args('')
+    args = parser.parse_args()
     print(args)
     # create model Unisal
     unisal_ = model.UNISAL(bypass_rnn=False)
@@ -89,7 +89,7 @@ if __name__ == "__main__":
                 }
             })
 
-    assert(len(dataloaders_) != 0) , "Error not data found"
+    assert(len(dataloaders_) != 0) , "Error no data found"
 
     # Instanciez le Trainer avec les arguments
     trainer = Trainer(
