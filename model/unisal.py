@@ -161,6 +161,9 @@ class UNISAL(BaseModel):
     ):
         super().__init__()
 
+
+        print(sources)
+
         # Check inputs
         assert gaussian_init in ("random", "manual")
         # Bypass-RNN requires residual RNN connection
@@ -217,7 +220,7 @@ class UNISAL(BaseModel):
         self.post_cnn = nn.Sequential(OrderedDict(post_cnn))
 
         # Initialize Bypass-RNN if training on dynamic data
-        if sources != ("SALICON",) or not self.bypass_rnn:
+        if not self.bypass_rnn:
             self.rnn = ConvGRU(
                 rnn_input_channels,
                 hidden_channels=[rnn_hidden_channels],
@@ -497,16 +500,13 @@ class UNISAL(BaseModel):
                 target_size = [target_size[0][0] , target_size[1][0]]
 
 
-        if x.shape[0] != 1:
-            source = "Hollywood"
-
         # Set the current source for the domain-specific BatchNorm modules
         self.this_source = source
 
         # Prepare other parameters
         source_str = f"_{source.lower()}"
         if static is None:
-            static = x.shape[1] == 1 or self.sources == ("SALICON",)
+            static = x.shape[1] == 1 
 
         # Compute backbone CNN features and concatenate with Gaussian prior maps
         feat_seq_1x = []

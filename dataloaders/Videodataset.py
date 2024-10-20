@@ -8,6 +8,7 @@ import PIL
 import random
 import os
 import re
+import glob
 
 decimal_pattern = re.compile(r'(\d+)\.jpg$')
 def extract_decimal(filename):
@@ -25,8 +26,26 @@ def normalize_tensor(tensor, rescale=False):
     return tensor / tsum if tsum > 0 else tensor.fill_(1. / tensor.numel())
 
 class VideoDataset(Dataset):
-    def __init__(self, path, N=4, verbose=1, preproc_cfg=None):
-        self.verbose = verbose
+    def __init__(
+            self,
+            path,
+            preproc_cfg=None,
+            seq_len=12,
+            frame_modulo=5,
+            phase='train',
+            extension = "jpg",
+            fix_dir = "fixation",
+            sal_dir = "maps",
+            img_dir = "images",
+            ratio_val_test = 0.858,
+            limit= 100
+            ):
+        self.ratio_val_test = ratio_val_test 
+        self.fix_dir = fix_dir
+        self.sal_dir = sal_dir
+        self.img_dir = img_dir
+        self.limit = limit
+
         self.preproc_cfg = {
             'rgb_mean': (0.485, 0.456, 0.406),
             'rgb_std': (0.229, 0.224, 0.225),
@@ -34,36 +53,43 @@ class VideoDataset(Dataset):
         if preproc_cfg is not None:
             self.preproc_cfg.update(preproc_cfg)
         self.dir = Path(path)
-        self.N = N  # Number of frames to sample randomly
+        self.seq_len = seq_len
+        self.frame_modulo = frame_modulo
+        self.phase = phase
+        self.extension = extension
         self.load_data()
 
-        print("Path:", path)
-        print(f"Numbers videos {len(self.all_video_folders)}")
-
-    @property
-    def fix_dir(self): return self.dir / 'fixations'
-    @property
-    def sal_dir(self): return self.dir / 'maps'
-    @property
-    def img_dir(self): return self.dir / 'frames'
+        print(f"Number video {len(self.all_video_folders)}")
 
     def load_data(self):
         self.all_video_folders = []
-        for folder_ in sorted(self.img_dir.iterdir()):
+        for folder_ in sorted(self.dir.iterdir()):
+
             # Parcours de chaque vidéo
             if folder_.stem == ".DS_Store":
                 continue
+
             self.all_video_folders.append({
-                'img' : os.path.join(self.img_dir , folder_.stem + ".mp4"), 
-                'fix' : os.path.join(self.fix_dir , folder_.stem + ".mp4"), 
-                'sal' : os.path.join(self.sal_dir , folder_.stem + ".mp4")
+                'img' : os.path.join(self.dir, folder_.stem, self.img_dir), 
+                'fix' : os.path.join(self.dir, folder_.stem, self.fix_dir), 
+                'sal' : os.path.join(self.dir, folder_.stem, self.sal_dir),
+                'len' : len(list(Path(os.path.join(self.dir, folder_.stem, self.img_dir)).glob(f"*.{self.extension}") ))
             })
 
+        if self.limit is not None:
+            self.all_video_folders = self.all_video_folders[:min(self.limit , len(self.all_video_folders))]
+
+        # separate btw train and val 
+        if self.phase == "train":
+            self.all_video_folders = self.all_video_folders[0:int(len(self.all_video_folders)*self.ratio_val_test)]
+        elif self.phase == "val":
+            self.all_video_folders = self.all_video_folders[int(len(self.all_video_folders)*self.ratio_val_test):]
 
     def load_frames(self, folder):
-        frames = sorted((Path(folder['img'])).glob("*.jpg"), key=lambda f: extract_decimal(f.name))
-        saliency_maps = sorted((Path(folder['sal'])).glob("*.jpg"), key=lambda f: extract_decimal(f.name))
-        fixation_maps = sorted((Path(folder['fix'])).glob("*.jpg"), key=lambda f: extract_decimal(f.name))
+        
+        frames = sorted((Path(folder['img'])).glob(f"*.{self.extension}"), key=lambda f: extract_decimal(f.name))
+        saliency_maps = sorted((Path(folder['sal'])).glob(f"*.{self.extension}"), key=lambda f: extract_decimal(f.name))
+        fixation_maps = sorted((Path(folder['fix'])).glob(f"*.{self.extension}"), key=lambda f: extract_decimal(f.name))
 
         return frames, saliency_maps, fixation_maps
 
@@ -91,23 +117,24 @@ class VideoDataset(Dataset):
         best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
 
         return tuple(r * 32 for r in best_size)
+
+    def get_frame_nrs(self,vid):
+        max_start_index = vid['len'] - (self.seq_len - 1) * (self.frame_modulo + 1)
+
+        if max_start_index <= 0:
+            raise ValueError("Impossible de sélectionner les indices avec les paramètres donnés.")
+
+        # Choisir un index de départ aléatoire
+        start_index = random.randint(0, max_start_index - 1)
+        
+        # Générer les indices à partir de l'index de départ
+        indices = [start_index + i * (self.frame_modulo + 1) for i in range(self.seq_len)]
+        return indices 
  
     def __getitem__(self, idx):
         folder = self.all_video_folders[idx]
         frames, saliency_maps, fixation_maps = self.load_frames(folder)
-
-        num_frames = len(frames)
-        half_window = self.N // 2
-
-        # Calculer les indices de début et de fin pour la fenêtre autour de idx
-        start_index = max(0, idx - half_window)
-        end_index = min(num_frames, start_index + self.N)
-        
-        # Si on est proche de la fin de la vidéo, ajuster start_index pour toujours avoir N frames
-        if end_index - start_index < self.N:
-            start_index = max(0, end_index - self.N)
-        
-        frame_indices = list(range(start_index, end_index))
+        frame_indices = self.get_frame_nrs(folder)
 
         video_frames = []
         saliency_frames = []

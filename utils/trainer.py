@@ -139,6 +139,7 @@ class Trainer():
                 for ix_ , sample in enumerate(loader['loader'][self.phase]):
 
                     loss, loss_summands, batch_size = self.fit_sample(
+                        loader['name'],
                         sample,
                         grad_clip=self.grad_clip
                     )
@@ -189,7 +190,7 @@ class Trainer():
                     f.write(str(val_score))
 
 
-    def fit_sample(self, sample, grad_clip=None):
+    def fit_sample(self,loader_name, sample, grad_clip=None):
         """
         Take a sample containing a batch, and fit/evaluate the model
         """
@@ -224,7 +225,7 @@ class Trainer():
             # Run forward pass
             pred_seq = self.model(
                 x = x,
-                # source = "Hollywood"
+                source = loader_name
                 )
             # pred_seq = self.model(x)
 

@@ -27,16 +27,22 @@ def normalize_tensor(tensor, rescale=False):
 
 class SALICONDataset(Dataset):
 
-    def __init__(self, path , phase='train', subset=None, verbose=1,
-                 out_size=(288, 384), target_size=(480, 640),
-                 preproc_cfg=None):
+    def __init__(
+            self,
+            path,
+            phase='train',
+            out_size=(288, 384),
+            target_size=(480, 640),
+            preproc_cfg=None,
+            limit = 100
+            ):
+
+        self.limit = limit
         self.phase = phase
-        self.train = phase == 'train'
-        self.subset = subset
-        self.verbose = verbose
         self.out_size = out_size
         self.target_size = target_size
         self.dir = Path(path) # path dataset
+
         self.preproc_cfg = {
             'rgb_mean': (0.485, 0.456, 0.406),
             'rgb_std': (0.229, 0.224, 0.225),
@@ -49,14 +55,7 @@ class SALICONDataset(Dataset):
         self.file_nr = "{:012d}"
 
         self.samples = self.prepare_samples()
-        if self.subset is not None:
-            self.samples = self.samples[:int(len(self.samples) * subset)]
-        # For compatibility with video datasets
-        self.n_images_dict = {img_nr: 1 for img_nr in self.samples}
-        self.target_size_dict = {
-            img_nr: self.target_size for img_nr in self.samples}
-        self.n_samples = len(self.samples)
-        self.frame_modulo = 1
+        print("Salicon size : " , len(self.samples))
 
     def get_map(self, img_nr):
         map_file = self.dir / 'maps' / self.phase_str / (
@@ -99,12 +98,11 @@ class SALICONDataset(Dataset):
 
     def prepare_samples(self):
         samples = []
-        for index , file in enumerate((self.dir / 'images' / self.phase_str).glob(self.file_stem + '*.jpg')):
+        for index , file in enumerate((self.dir / 'images' / self.phase).glob(self.file_stem + '*.jpg')):
             samples.append(int(file.stem[-12:]))
-            if index == 100 : 
-                break
-
-        print("Samples Salicon " , len(samples))
+        
+        if self.limit is not None:
+            samples= samples[:min(self.limit , len(samples))]
         return sorted(samples)
 
     def __len__(self):
@@ -114,8 +112,8 @@ class SALICONDataset(Dataset):
         transformations = [
             transforms.ToPILImage(),
         ]
-        if data == 'img':
-            transformations.append(transforms.Resize(
+        # if data == 'img':
+        transformations.append(transforms.Resize(
                 self.out_size, interpolation=PIL.Image.LANCZOS))
         transformations.append(transforms.ToTensor())
         if data == 'img' and 'rgb_mean' in self.preproc_cfg:
@@ -135,15 +133,12 @@ class SALICONDataset(Dataset):
     def get_data(self, img_nr):
         img = self.get_img(img_nr)
         img = self.preprocess(img, data='img')
-        if self.phase == 'test':
-            return [1], img, self.target_size
-
         sal = self.get_map(img_nr)
         sal = self.preprocess(sal, data='sal')
         fix = self.get_fixation_map(img_nr)
         fix = self.preprocess(fix, data='fix')
 
-        return img, sal, fix, self.target_size
+        return img, sal, fix, self.out_size
 
     def __getitem__(self, item):
         img_nr = self.samples[item]

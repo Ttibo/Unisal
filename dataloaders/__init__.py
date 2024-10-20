@@ -2,5 +2,4 @@ from .ImagePath import open_image
 from .VideoPath import VideoPath
 from .Salicon import SALICONDataset
 from .Packaging import PACKAGINGDataset
-from .Videodataset import VideoDataset
-from .VideoDatasetV2 import VideoDatasetV2
+from .VideoDataset import VideoDataset
