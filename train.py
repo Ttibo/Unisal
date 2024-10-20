@@ -114,12 +114,14 @@ if __name__ == "__main__":
     ucf_train = dataloaders.VideoDataset(
         path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ucf_sports_actions/train/",
         phase = "full",
+        extension="png",
         seq_len=args.seq_len,
         )
 
     ucf_val = dataloaders.VideoDataset(
         path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ucf_sports_actions/val/",
         phase = "full",
+        extension="png",
         seq_len=args.seq_len
         )
 
