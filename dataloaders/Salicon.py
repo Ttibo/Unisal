@@ -34,7 +34,7 @@ class SALICONDataset(Dataset):
             out_size=(288, 384),
             target_size=(480, 640),
             preproc_cfg=None,
-            limit = 100
+            limit = None
             ):
 
         self.limit = limit
@@ -55,7 +55,6 @@ class SALICONDataset(Dataset):
         self.file_nr = "{:012d}"
 
         self.samples = self.prepare_samples()
-        print("Salicon size : " , len(self.samples))
 
     def get_map(self, img_nr):
         map_file = self.dir / 'maps' / self.phase_str / (

@@ -62,7 +62,12 @@ if __name__ == "__main__":
     if args.setting == "local":
         path_dataset_ = setting.DATASET_PATHS_LOCAL
     if args.setting == "server":
-        path_dataset_ = setting.DATASET_PATHS_LOCAL
+        path_dataset_ = setting.DATASET_PATHS_SERVER
+    if args.setting == "desktop":
+        path_dataset_ = setting.DATASET_PATHS_DESKTOP
+
+
+    print(path_dataset_)
 
 
     for key, v in path_dataset_.items():
@@ -70,19 +75,23 @@ if __name__ == "__main__":
 
         if v['type'] == "image" and key == "SALICON":
             _train = dataloaders.SALICONDataset(path =v['train'], phase="train" )
-            _val = dataloaders.SALICONDataset(path =v['train'], phase="val" )
+            _val = dataloaders.SALICONDataset(path =v['val'], phase="val" )
 
         if v['type'] == "image" and  key == "Packaging":
-            _train = dataloaders.PACKAGINGDataset(path =v['train'], phase="train" )
-            _val = dataloaders.PACKAGINGDataset(path =v['train'], phase="val" )
+            _train = dataloaders.PACKAGINGDataset(path =v['train'] )
+            _val = dataloaders.PACKAGINGDataset(path =v['val'])
 
-        elif v['type'] == "video" :
-            _train = dataloaders.VideoDataset(path = v['train'] , seq_len= args.seq_len, frame_modulo= 5, phase= "train" , extension=v['extension'])
-            _val = dataloaders.VideoDataset(path = v['val'] , seq_len= args.seq_len, frame_modulo= 5, phase= "train" , extension=v['extension'])
+        elif v['type'] == "video" and key == "UCFSports":
+            _train = dataloaders.VideoDataset(path = v['path'] + "train/" , seq_len= args.seq_len, frame_modulo= 2,ratio_val_test = 1., phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
+            _val = dataloaders.VideoDataset(path = v['path'] + "val/" , seq_len= args.seq_len, frame_modulo= 2,ratio_val_test=0., phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
+        elif v['type'] == "video":
+            _train = dataloaders.VideoDataset(path = v['path'] , seq_len= args.seq_len, frame_modulo= 3, phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
+            _val = dataloaders.VideoDataset(path = v['path'] , seq_len= args.seq_len, frame_modulo= 3, phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
         batch_size = args.batch_size_video if v['type'] == "video" else args.batch_size_image
-        print(f"Batch size {batch_size}")
+        print(f" - Batch size {batch_size}")
+        print(f" - len train {len(_train)} : val  {len(_val)})")
 
         dataloaders_.append(
         {

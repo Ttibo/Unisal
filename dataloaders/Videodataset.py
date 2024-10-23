@@ -116,12 +116,11 @@ class VideoDataset(Dataset):
        
         ar = img_size[0] / img_size[1]
         best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
-
+        return  (288, 384)
         return tuple(r * 32 for r in best_size)
 
     def get_frame_nrs(self,vid):
         max_start_index = vid['len'] - (self.seq_len - 1) * (self.frame_modulo + 1)
-
         if max_start_index <= 0:
             raise ValueError("Impossible de sélectionner les indices avec les paramètres donnés.")
 
