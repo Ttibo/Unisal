@@ -38,7 +38,7 @@ class VideoDataset(Dataset):
             sal_dir = "maps",
             img_dir = "images",
             ratio_val_test = 0.858,
-            limit= 100
+            limit= None
             ):
         self.ratio_val_test = ratio_val_test 
         self.fix_dir = fix_dir
@@ -58,8 +58,6 @@ class VideoDataset(Dataset):
         self.phase = phase
         self.extension = extension
         self.load_data()
-
-        print(f"Number video {len(self.all_video_folders)}")
 
     def load_data(self):
         self.all_video_folders = []

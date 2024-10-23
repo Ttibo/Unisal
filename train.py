@@ -1,4 +1,5 @@
 
+import setting
 
 import os
 import math
@@ -49,120 +50,50 @@ if __name__ == "__main__":
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/test_train_scratch/" , help='path save output')
+    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention/" , help='path save output')
+    parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
+
 
     # Analysez les arguments
     args = parser.parse_args()
-    print(args)
     dataloaders_ = []
+    print(args)
 
-    # load SALICON dataset
-    print("Salicon Dataset")
-    salicon_train = dataloaders.SALICONDataset(path ="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/SALICON/", phase="train" )
-    salicon_val = dataloaders.SALICONDataset(path ="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/SALICON/", phase="val" )
-    dataloaders_.append(
-    {
-        'name' : 'Salicon',
-        'loader' : {
-            'train' : DataLoader(salicon_train, batch_size=args.batch_size_image, shuffle=True),
-            'val' : DataLoader(salicon_val, batch_size=args.batch_size_image, shuffle=True)
-        }
-    })
+    if args.setting == "local":
+        path_dataset_ = setting.DATASET_PATHS_LOCAL
+    if args.setting == "server":
+        path_dataset_ = setting.DATASET_PATHS_LOCAL
 
-    # load packaging dataset
-    print("Packaging Dataset")
-    packaging_train = dataloaders.PACKAGINGDataset("/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/train/")
-    packaging_val = dataloaders.PACKAGINGDataset("/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/val/")
 
-    dataloaders_.append(
-    {
-        'name' : 'Packaging',
-        'loader' : {
-            'train' : DataLoader(packaging_train, batch_size=args.batch_size_image, shuffle=True),
-            'val' : DataLoader(packaging_val, batch_size=args.batch_size_image, shuffle=True)
-        }
-    })
+    for key, v in path_dataset_.items():
+        print(key , " " , v)
 
-    # Load DHF1K dataset
-    print("DHF1K Dataset")
-    dhf1k_train = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/DHF1K/DHF1K/",
-        phase = "train",
-        seq_len=args.seq_len
-        )
+        if v['type'] == "image" and key == "SALICON":
+            _train = dataloaders.SALICONDataset(path =v['train'], phase="train" )
+            _val = dataloaders.SALICONDataset(path =v['train'], phase="val" )
 
-    dhf1k_val = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/DHF1K/DHF1K/",
-        phase = "val",
-        seq_len=args.seq_len
-        )
+        if v['type'] == "image" and  key == "Packaging":
+            _train = dataloaders.PACKAGINGDataset(path =v['train'], phase="train" )
+            _val = dataloaders.PACKAGINGDataset(path =v['train'], phase="val" )
 
-    dataloaders_.append(
+        elif v['type'] == "video" :
+            _train = dataloaders.VideoDataset(path = v['train'] , seq_len= args.seq_len, frame_modulo= 5, phase= "train" , extension=v['extension'])
+            _val = dataloaders.VideoDataset(path = v['val'] , seq_len= args.seq_len, frame_modulo= 5, phase= "train" , extension=v['extension'])
+
+
+        batch_size = args.batch_size_video if v['type'] == "video" else args.batch_size_image
+        print(f"Batch size {batch_size}")
+
+        dataloaders_.append(
         {
-            'name' : 'DHF1K',
+            'name' : key,
             'loader' : {
-                'train' : DataLoader(dhf1k_train, batch_size=args.batch_size_video, shuffle=True),
-                'val' : DataLoader(dhf1k_val, batch_size=args.batch_size_video, shuffle=True)
-            }
-        })
-
-
-
-
-    # Load UCF dataset
-    print("UCF Dataset")
-    ucf_train = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ucf_sports_actions/train/",
-        phase = "full",
-        extension="png",
-        seq_len=args.seq_len,
-        )
-
-    ucf_val = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/ucf_sports_actions/val/",
-        phase = "full",
-        extension="png",
-        seq_len=args.seq_len
-        )
-
-    dataloaders_.append(
-        {
-            'name' : 'UCF',
-            'loader' : {
-                'train' : DataLoader(ucf_train, batch_size=args.batch_size_video, shuffle=True),
-                'val' : DataLoader(ucf_val, batch_size=args.batch_size_video, shuffle=True)
-            }
-        })
-
-
-    # ittention dataset loader video
-    print("Advertising Dataset")
-    ittention_vid_train = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Ittention_advertising_video/",
-        img_dir="frames",
-        phase="train",
-        seq_len=args.seq_len
-        )
-
-    ittention_vid_val = dataloaders.VideoDataset(
-        path="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Ittention_advertising_video/",
-        img_dir="frames",
-        phase="val",
-        seq_len=args.seq_len
-        )
-
-    dataloaders_.append(
-        {
-            'name' : 'Advertising',
-            'loader' : {
-                'train' : DataLoader(ittention_vid_train, batch_size=args.batch_size_video, shuffle=True),
-                'val' : DataLoader(ittention_vid_val, batch_size=args.batch_size_video, shuffle=True)
+                'train' : DataLoader(_train, batch_size=batch_size, shuffle=True),
+                'val' : DataLoader(_val, batch_size=batch_size, shuffle=True)
             }
         })
 
     assert(len(dataloaders_) != 0) , "Error no data found"
-
-
 
     # create model Unisal
     if args.pretrained:
@@ -182,8 +113,6 @@ if __name__ == "__main__":
     # move model to device
     print(f"Move model to torch device set to: {DEFAULT_DEVICE}")
     unisal_.to(DEFAULT_DEVICE)
-
-
 
     # Instanciez le Trainer avec les arguments
     trainer = Trainer(

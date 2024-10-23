@@ -11,6 +11,7 @@ from itertools import chain
 from tqdm import tqdm
 import utils.utils as utils
 import torch
+import json
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -70,6 +71,14 @@ class Trainer():
         self.train_dir = Path(path)
         if os.path.exists(path) == False:
             os.mkdir(self.train_dir)
+
+        # save sources informations
+        model_sources_ = [src for src in model.sources]
+        json_object = json.dumps(model_sources_, indent=4)
+        with open(path + "sources.json", "w") as outfile:
+            outfile.write(json_object)
+
+
 
         if os.path.exists(self.train_dir / 'checkpoints' ) == False:
             os.mkdir(self.train_dir / 'checkpoints')
