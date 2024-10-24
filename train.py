@@ -31,27 +31,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Trainer for the model.')
 
     # Ajoutez les arguments pour le Trainer
-    parser.add_argument('--num_epochs', type=int, default=25, help='Nombre d\'époques pour l\'entraînement.')
-    parser.add_argument('--batch_size_image', type=int, default=10, help='Batch size image')
+    parser.add_argument('--num_epochs', type=int, default=55, help='Nombre d\'époques pour l\'entraînement.')
+    parser.add_argument('--batch_size_image', type=int, default=12, help='Batch size image')
     parser.add_argument('--batch_size_video', type=int, default=4, help='Batch size video')
-    parser.add_argument('--seq_len', type=int, default=12, help='sequence lenght video')
+    parser.add_argument('--seq_len', type=int, default=16, help='sequence lenght video')
     parser.add_argument('--pretrained', type=bool, default=False, help='load pretrained model')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
-    parser.add_argument('--lr', type=float, default=0.04, help='Taux d\'apprentissage.')
+    parser.add_argument('--lr', type=float, default=0.02, help='Taux d\'apprentissage.')
     parser.add_argument('--lr_scheduler', type=str, default="ExponentialLR", help='Type de planificateur de taux d\'apprentissage.')
     parser.add_argument('--lr_gamma', type=float, default=0.99, help='Facteur gamma pour le planificateur de taux d\'apprentissage.')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Poids de décroissance pour l\'optimiseur.')
     parser.add_argument('--cnn_weight_decay', type=float, default=1e-5, help='Poids de décroissance pour le CNN.')
-    parser.add_argument('--train_cnn_after', type=int, default=15, help='Nombres epochs pour commencer à entrainer l encoder')
+    parser.add_argument('--train_cnn_after', type=int, default=25, help='Nombres epochs pour commencer à entrainer l encoder')
     parser.add_argument('--grad_clip', type=float, default=2.0, help='Valeur de coupure de gradient.')
     parser.add_argument('--cnn_lr_factor', type=float, default=0.1, help='Facteur de taux d\'apprentissage pour le CNN.')
     parser.add_argument('--loss_metrics', type=str, nargs='+', default=["kld", "nss", "cc"], help='Métriques de perte à utiliser.')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention/" , help='path save output')
-    parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
+    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_2/" , help='path save output')
+    parser.add_argument('--setting', type=str, default="server" , help='local or server setting')
 
 
     # Analysez les arguments
@@ -65,10 +65,7 @@ if __name__ == "__main__":
         path_dataset_ = setting.DATASET_PATHS_SERVER
     if args.setting == "desktop":
         path_dataset_ = setting.DATASET_PATHS_DESKTOP
-
-
     print(path_dataset_)
-
 
     for key, v in path_dataset_.items():
         print(key , " " , v)

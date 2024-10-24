@@ -74,7 +74,7 @@ class VideoDataset(Dataset):
                 'len' : len(list(Path(os.path.join(self.dir, folder_.stem, self.img_dir)).glob(f"*.{self.extension}") ))
             })
 
-            if self.all_video_folders[-1]['len'] < self.seq_len:
+            if self.all_video_folders[-1]['len'] - (self.seq_len - 1) * (self.frame_modulo + 1) < 1 : 
                 self.all_video_folders.pop(-1)
 
         if self.limit is not None:

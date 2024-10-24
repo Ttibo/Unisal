@@ -43,24 +43,27 @@ DATASET_PATHS_SERVER = {
     },
     'Packaging': {
         'type' : 'image',
-        'train': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/train/",
-        'val': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/val/",
+        'train': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/train/",
+        'val': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/val/",
         'extension' : "jpg"
     },
     'DHF1K': {
         'type' : 'video',
-        'path': "/home/LelongT/Datasety/DHF1K/",
-        'extension' : "jpg"
+        'path': "/home/LelongT/Dataset/DHF1K/",
+        'extension' : "jpg",
+        'img_dir' : "images"
     },
     'UCFSports': {
         'type' : 'video',
-        'path': "/home/LelongT/Datasety/ucf_sports_actions/",
-        'extension' : "jpg"
+        'path': "/home/LelongT/Dataset/ucf_sports_actions/",
+        'extension' : "png",
+        'img_dir' : "images"
     },
     'Advertising': {
         'type' : 'video',
-        'train': "/home/LelongT/Datasety/Ittention_advertising_video/",
-        'extension' : "jpg"
+        'path': "/home/LelongT/Dataset/ittention_advertising_video/",
+        'extension' : "jpg",
+        'img_dir' : "frames"
     }
 }
 
