@@ -12,6 +12,7 @@ from tqdm import tqdm
 import utils.utils as utils
 import torch
 import json
+# import utils.salience_metrics
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -36,7 +37,7 @@ class Trainer():
         lr_gamma=0.99,
         weight_decay=1e-4,
         cnn_weight_decay=1e-5,
-        grad_clip=2.0,
+        grad_clip=1.0,
         cnn_lr_factor=0.1,
         loss_metrics=("kld", "nss", "cc"),
         loss_weights=(1, -0.1, -0.1),
@@ -78,8 +79,6 @@ class Trainer():
         with open(path + "sources.json", "w") as outfile:
             outfile.write(json_object)
 
-
-
         if os.path.exists(self.train_dir / 'checkpoints' ) == False:
             os.mkdir(self.train_dir / 'checkpoints')
 
@@ -96,7 +95,6 @@ class Trainer():
 
         self.best_epoch = 0
         self.best_val_score = None
-
 
     def fit(self):
         """
@@ -127,6 +125,7 @@ class Trainer():
 
         # Prepare book keeping
         running_losses = {src['name']: 0.0 for src in self.dataloaders}
+        running_eval = {src['name']: 0.0 for src in self.dataloaders}
         running_loss_summands = {
             src['name']: [0.0 for _ in self.loss_weights] for src in self.dataloaders
         }
@@ -144,9 +143,9 @@ class Trainer():
 
         for _ , loader in enumerate(self.dataloaders):
 
-            with tqdm(total=len(loader['loader'][self.phase]), desc="Batch processing", unit="Batch") as pbar:
+            with tqdm(total=len(loader['loader'][self.phase]), desc=f"Batch processing {loader['name']}", unit="Batch") as pbar:
                 for ix_ , sample in enumerate(loader['loader'][self.phase]):
-
+                    
                     loss, loss_summands, batch_size = self.fit_sample(
                         loader['name'],
                         sample,
@@ -217,7 +216,6 @@ class Trainer():
             fix = fix.to(self.device)
 
             if self.phase == "train":
-
                 # Switch the RNN gradients off if this is a image batch
                 rnn_grad = x.shape[1] != 1 or not self.model.bypass_rnn
                 for param in chain(
@@ -227,9 +225,9 @@ class Trainer():
 
                 # Switch the gradients of unused dataset-specific modules off
                 for name, param in self.model.named_parameters():
-                    # for source in self.all_data_sources:
-                    #     if source.lower() in name.lower():
-                    param.requires_grad = True
+                    for source in self.model.sources:
+                        if source.lower() in name.lower():
+                            param.requires_grad = source == loader_name
 
             # Run forward pass
             pred_seq = self.model(
@@ -359,3 +357,50 @@ class Trainer():
             else:
                 raise ValueError(f"Unknown scheduler {self.lr_scheduler}")
         return self._scheduler
+
+
+    def eval_sequences(
+            self,
+            pred_seq,
+            sal_seq,
+            fix_seq,
+            metrics = ['sim' , 'aucj'],
+            other_maps=None,
+            auc_portion=1.0
+        ):
+
+        """
+        Compute SIM, AUC-J and s-AUC scores
+        """
+
+        # process inputs
+        metrics = [metric for metric in metrics if metric in ("sim", "aucj", "aucs")]
+        if "aucs" in metrics:
+            assert other_maps is not None
+
+        # Preprocess sequences
+        shape = pred_seq.shape
+        new_shape = (-1, shape[-2], shape[-1])
+        pred_seq = pred_seq.exp()
+        pred_seq = pred_seq.detach().cpu().numpy().reshape(new_shape)
+        sal_seq = sal_seq.detach().cpu().numpy().reshape(new_shape)
+        fix_seq = fix_seq.detach().cpu().numpy().reshape(new_shape)
+
+        auc_indices = set(list(range(shape[1])))
+
+        # Compute the metrics
+        results = {metric: [] for metric in metrics}
+        for idx, (pred, sal, fix) in enumerate(zip(pred_seq, sal_seq, fix_seq)):
+            for this_metric in metrics:
+                if this_metric == "sim":
+                    results["sim"].append(utils.similarity(pred, sal))
+                if this_metric == "aucj":
+                    if idx in auc_indices:
+                        results["aucj"].append(utils.auc_judd(pred, fix))
+                if this_metric == "aucs":
+                    if idx in auc_indices:
+                        other_map = next(other_maps)
+                        results["aucs"].append(
+                            utils.auc_shuff_acl(pred, fix, other_map)
+                        )
+        return [np.array(results[metric]) for metric in metrics]
