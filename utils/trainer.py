@@ -12,7 +12,8 @@ from tqdm import tqdm
 import utils.utils as utils
 import torch
 import json
-# import utils.salience_metrics
+from itertools import zip_longest
+from random import shuffle
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -101,20 +102,30 @@ class Trainer():
         Train the model
         """
 
+        score_ = 1e8
         while self.epoch < self.num_epochs:
             self.scheduler.step(epoch=self.epoch)
             lr = self.optimizer.param_groups[0]["lr"]
             print(f"\nEpoch {self.epoch:3d}, lr {lr:.5f}")
 
+            losses_ = {
+                'epoch' : self.epoch
+            }
+
             for self.phase in self.phases:
-                self.fit_phase()
+                losses_[self.phase] = self.fit_phase()
+
+            # save best weights
+            if score_ > losses_['val']['global']:
+                score_ = losses_['val']['global']
+                self.save_best(losses_)
 
             # Save a checkpoint if applicable
             if (
                 self.epoch >= self.chkpnt_warmup
                 and (self.epoch + 1) % self.chkpnt_epochs == 0
             ) or self.epoch == self.num_epochs - 1:
-                self.save_chkpnt()
+                self.save_chkpnt(losses_)
 
             self.epoch += 1
 
@@ -124,12 +135,36 @@ class Trainer():
         """
 
         # Prepare book keeping
-        running_losses = {src['name']: 0.0 for src in self.dataloaders}
-        running_eval = {src['name']: 0.0 for src in self.dataloaders}
+        running_losses = {key: 0.0 for key , _ in self.dataloaders.items()}
+        running_eval = {key: 0.0 for key, _ in self.dataloaders.items()}
         running_loss_summands = {
-            src['name']: [0.0 for _ in self.loss_weights] for src in self.dataloaders
+            key: [0.0 for _ in self.loss_weights] for key, _ in self.dataloaders.items()
         }
-        n_samples = {src['name']: 0 for src in self.dataloaders}
+        n_samples = {key: 0 for key, _ in self.dataloaders.items()}
+
+
+
+        # Initialise la liste `all_batches`
+        all_batches = []
+
+
+        all_batches = [
+            src
+            for src in chain.from_iterable(
+                zip_longest(
+                    *[[key for _ in range(len(v[self.phase]))] for key, v in self.dataloaders.items()]
+                )
+            )
+            if src is not None
+        ]
+
+        shuffle(all_batches)
+
+        if self.epoch == 0:
+            print(f"Number of batches: {len(all_batches)}")
+            print(", ".join(f"{key}: {len(v[self.phase])}" for key, v in self.dataloaders.items()))
+
+
         # Set model train/eval mode
         self.model.train(self.phase == "train")
 
@@ -141,61 +176,87 @@ class Trainer():
             if self.cnn_eval:
                 self.model.cnn.eval()
 
-        for _ , loader in enumerate(self.dataloaders):
 
-            with tqdm(total=len(loader['loader'][self.phase]), desc=f"Batch processing {loader['name']}", unit="Batch") as pbar:
-                for ix_ , sample in enumerate(loader['loader'][self.phase]):
-                    
-                    loss, loss_summands, batch_size = self.fit_sample(
-                        loader['name'],
-                        sample,
-                        grad_clip=self.grad_clip
-                    )
+        data_iters = {key: iter(v[self.phase]) for key, v in self.dataloaders.items()}
 
-                    running_losses[loader['name']] += loss * batch_size
-                    running_loss_summands[loader['name']] = [
-                        r + l * batch_size
-                        for r, l in zip(running_loss_summands[loader['name']], loss_summands)
-                    ]
-                    n_samples[loader['name']] += batch_size
 
-                    pbar.update(1)
+        with tqdm(total=len(all_batches), desc=f"{self.phase} Batch", unit="Batch") as pbar:
+            for _, src in enumerate(all_batches):
+                # Get the next batch
+                sample = next(data_iters[src])
+
+                loss, loss_summands, batch_size = self.fit_sample(
+                    src,
+                    sample,
+                    grad_clip=self.grad_clip
+                )
+
+                running_losses[src] += loss * batch_size
+                running_loss_summands[src] = [
+                    r + l * batch_size
+                    for r, l in zip(running_loss_summands[src], loss_summands)
+                ]
+                n_samples[src] += batch_size
+
+                pbar.update(1)
 
 
         loss_global_ = 0.
-        for idx , loader in enumerate(self.dataloaders):
-            phase_loss = running_losses[loader['name']] / n_samples[loader['name']]
+        loss_object_ = {}
+        for key , v in self.dataloaders.items():
+            phase_loss = running_losses[key] / n_samples[key]
             phase_loss_summands = [
-                loss_ / n_samples[loader['name']] for loss_ in running_loss_summands[loader['name']]
+                loss_ / n_samples[key] for loss_ in running_loss_summands[key]
             ]
 
+            loss_object_[key] = {
+                'loss' : phase_loss,
+                'losses' : {}
+            }
+
             print(
-                f"{loader['name']:9s}:   Phase: {self.phase}, loss: {phase_loss:.4f}, "
+                f"  - {key:9s}:   Phase: {self.phase}, loss: {phase_loss:.4f}, "
                 + ", ".join(
                     f"loss {idx}: {loss_:.4f}"
                     for idx, loss_ in zip(self.loss_metrics, phase_loss_summands)
                 )
             )
 
+            for idx, loss_ in zip(self.loss_metrics, phase_loss_summands):
+                loss_object_[key]['losses'][idx] =loss_
+
+
             loss_global_ += phase_loss
         loss_global_ /= len(self.dataloaders)
-        print(f"GLOBAl LOSS {loss_global_}")
 
-        if (
-            self.phase == "val"
-            # and self.epoch >= self.chkpnt_warmup
-        ):
-            val_score = -loss_global_
-            if self.best_val_score is None:
-                self.best_val_score = val_score
-            elif val_score > self.best_val_score:
-                print("      - UPADTE BEST WEIGHTS")
-                self.best_val_score = val_score
-                self.model.save_weights(self.train_dir, "best")
-                with open(self.train_dir / "best_epoch.dat", "w") as f:
-                    f.write(str(self.epoch))
-                with open(self.train_dir / "best_val_loss.dat", "w") as f:
-                    f.write(str(val_score))
+        loss_object_['global'] = loss_global_
+
+        return loss_object_
+
+
+
+        # print(f"GLOBAl LOSS {loss_global_}")
+
+        # if (
+        #     self.phase == "val"
+        #     # and self.epoch >= self.chkpnt_warmup
+        # ):
+        #     val_score = -loss_global_
+        #     if self.best_val_score is None:
+        #         self.best_val_score = val_score
+        #     elif val_score > self.best_val_score:
+        #         print("      - UPADTE BEST WEIGHTS")
+        #         self.best_val_score = val_score
+        #         self.model.save_weights(self.train_dir, "best")
+        #         with open(self.train_dir / "best_epoch.dat", "w") as f:
+        #             f.write(str(self.epoch))
+        #         with open(self.train_dir / "best_val_loss.dat", "w") as f:
+        #             f.write(str(val_score))
+
+        #         json_object = json.dumps({'metrics' : self.loss_metrics , 'loss' : running_loss_summands}, indent=4)
+        #         with open(self.train_dir / "losses.json" , "w") as f:
+        #             f.write(json_object)
+
 
 
     def fit_sample(self,loader_name, sample, grad_clip=None):
@@ -234,7 +295,6 @@ class Trainer():
                 x = x,
                 source = loader_name
                 )
-            # pred_seq = self.model(x)
 
             # Compute the total loss
             loss_summands = self.loss_sequences(
@@ -306,9 +366,20 @@ class Trainer():
                 "weight_decay": self.cnn_weight_decay,
             },
         ]
+
+    def save_best(self,losses):
+        """Save best model and losses"""
+        print("      - UPADTE BEST WEIGHTS")
+        self.model.save_weights(self.train_dir, "best")
+        with open(self.train_dir / "best_epoch.dat", "w") as f:
+            f.write(str(self.epoch))
+
+        json_object = json.dumps(losses, indent=4)
+        with open(self.train_dir / "best_epoch_loss.json" , "w") as f:
+            f.write(json_object)
     
 
-    def save_chkpnt(self):
+    def save_chkpnt(self, losses, save_weights = False):
         """Save model and trainer checkpoint"""
         print(f"Saving checkpoint at epoch {self.epoch}")
         chkpnt = {
@@ -316,7 +387,12 @@ class Trainer():
             "optimizer_state_dict": self.optimizer.state_dict(),
         }
 
-        torch.save(chkpnt, self.train_dir / 'checkpoints' / f"chkpnt_epoch{self.epoch:04d}.pth")
+        if save_weights:
+            torch.save(chkpnt, self.train_dir / 'checkpoints' / f"chkpnt_epoch{self.epoch:04d}.pth")
+
+        json_object = json.dumps(losses, indent=4)
+        with open( self.train_dir / 'checkpoints' / f"chkpnt_epoch{self.epoch:04d}.json" , "w") as f:
+            f.write(json_object)
 
 
     @property
@@ -358,49 +434,3 @@ class Trainer():
                 raise ValueError(f"Unknown scheduler {self.lr_scheduler}")
         return self._scheduler
 
-
-    def eval_sequences(
-            self,
-            pred_seq,
-            sal_seq,
-            fix_seq,
-            metrics = ['sim' , 'aucj'],
-            other_maps=None,
-            auc_portion=1.0
-        ):
-
-        """
-        Compute SIM, AUC-J and s-AUC scores
-        """
-
-        # process inputs
-        metrics = [metric for metric in metrics if metric in ("sim", "aucj", "aucs")]
-        if "aucs" in metrics:
-            assert other_maps is not None
-
-        # Preprocess sequences
-        shape = pred_seq.shape
-        new_shape = (-1, shape[-2], shape[-1])
-        pred_seq = pred_seq.exp()
-        pred_seq = pred_seq.detach().cpu().numpy().reshape(new_shape)
-        sal_seq = sal_seq.detach().cpu().numpy().reshape(new_shape)
-        fix_seq = fix_seq.detach().cpu().numpy().reshape(new_shape)
-
-        auc_indices = set(list(range(shape[1])))
-
-        # Compute the metrics
-        results = {metric: [] for metric in metrics}
-        for idx, (pred, sal, fix) in enumerate(zip(pred_seq, sal_seq, fix_seq)):
-            for this_metric in metrics:
-                if this_metric == "sim":
-                    results["sim"].append(utils.similarity(pred, sal))
-                if this_metric == "aucj":
-                    if idx in auc_indices:
-                        results["aucj"].append(utils.auc_judd(pred, fix))
-                if this_metric == "aucs":
-                    if idx in auc_indices:
-                        other_map = next(other_maps)
-                        results["aucs"].append(
-                            utils.auc_shuff_acl(pred, fix, other_map)
-                        )
-        return [np.array(results[metric]) for metric in metrics]

@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=55, help='Nombre d\'époques pour l\'entraînement.')
     parser.add_argument('--batch_size_image', type=int, default=12, help='Batch size image')
     parser.add_argument('--batch_size_video', type=int, default=4, help='Batch size video')
-    parser.add_argument('--seq_len', type=int, default=16, help='sequence lenght video')
+    parser.add_argument('--seq_len', type=int, default=6, help='sequence lenght video')
     parser.add_argument('--pretrained', type=bool, default=False, help='load pretrained model')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
@@ -51,12 +51,11 @@ if __name__ == "__main__":
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
     parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_2/" , help='path save output')
-    parser.add_argument('--setting', type=str, default="server" , help='local or server setting')
+    parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
 
 
     # Analysez les arguments
     args = parser.parse_args()
-    dataloaders_ = []
     print(args)
 
     if args.setting == "local":
@@ -66,6 +65,9 @@ if __name__ == "__main__":
     if args.setting == "desktop":
         path_dataset_ = setting.DATASET_PATHS_DESKTOP
     print(path_dataset_)
+
+
+    dataloaders_ = {}
 
     for key, v in path_dataset_.items():
         print(key , " " , v)
@@ -83,21 +85,17 @@ if __name__ == "__main__":
             _val = dataloaders.VideoDataset(path = v['path'] + "val/" , seq_len= args.seq_len, frame_modulo= 2,ratio_val_test=0., phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
         elif v['type'] == "video":
-            _train = dataloaders.VideoDataset(path = v['path'] , seq_len= args.seq_len, frame_modulo= 3, phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
-            _val = dataloaders.VideoDataset(path = v['path'] , seq_len= args.seq_len, frame_modulo= 3, phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
+            _train = dataloaders.VideoDataset(path = v['path'], limit=10 , seq_len= args.seq_len, frame_modulo= 3, phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
+            _val = dataloaders.VideoDataset(path = v['path'], limit=3 , seq_len= args.seq_len, frame_modulo= 3, phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
         batch_size = args.batch_size_video if v['type'] == "video" else args.batch_size_image
         print(f" - Batch size {batch_size}")
         print(f" - len train {len(_train)} : val  {len(_val)})")
 
-        dataloaders_.append(
-        {
-            'name' : key,
-            'loader' : {
-                'train' : DataLoader(_train, batch_size=batch_size, shuffle=True),
-                'val' : DataLoader(_val, batch_size=batch_size, shuffle=True)
-            }
-        })
+        dataloaders_[key] = {
+            'train' : DataLoader(_train, batch_size=batch_size, shuffle=True),
+            'val' : DataLoader(_val, batch_size=batch_size, shuffle=True)
+        }
 
     assert(len(dataloaders_) != 0) , "Error no data found"
 
@@ -112,7 +110,7 @@ if __name__ == "__main__":
         unisal_.load_weights(directory_ )
     else : 
         unisal_ = model.UNISAL(
-            sources= [loader['name'] for loader in dataloaders_],
+            sources= [key for key , _ in dataloaders_.items()],
             bypass_rnn=False
             )
 

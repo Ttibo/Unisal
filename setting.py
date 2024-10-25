@@ -25,12 +25,12 @@ DATASET_PATHS_LOCAL = {
     #     'extension' : "png",
     #     'img_dir' : "images"
     # },
-    # 'Advertising': {
-    #     'type' : 'video',
-    #     'path': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Ittention_advertising_video/",
-    #     'extension' : "jpg",
-    #     'img_dir' : "frames"
-    # }
+    'Advertising': {
+        'type' : 'video',
+        'path': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Ittention_advertising_video/",
+        'extension' : "jpg",
+        'img_dir' : "frames"
+    }
 }
 
 

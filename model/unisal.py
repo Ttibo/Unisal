@@ -152,7 +152,7 @@ class UNISAL(BaseModel):
         smoothing_ksize=41,
         bn_momentum=0.01,
         static_bn_momentum=0.1,
-        sources=("DHF1K", "Hollywood", "UCFSports", "SALICON"),
+        sources=["DHF1K", "Hollywood", "UCFSports", "SALICON"],
         ds_bn=True,
         ds_adaptation=True,
         ds_smoothing=True,
