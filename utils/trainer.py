@@ -209,6 +209,7 @@ class Trainer():
             ]
             n_samples[src] += batch_size
 
+        print()
 
 
         loss_object_ = {

@@ -35,7 +35,7 @@ DATASET_PATHS_LOCAL = {
 
 
 DATASET_PATHS_SERVER = {
-    'Packaging': {
+    'SALICON': {
         'type' : 'image',
         'train': "/home/LelongT/Dataset/SALICON/",
         'val': "/home/LelongT/Dataset/SALICON/",
