@@ -32,10 +32,10 @@ if __name__ == "__main__":
 
     # Ajoutez les arguments pour le Trainer
     parser.add_argument('--num_epochs', type=int, default=55, help='Nombre d\'époques pour l\'entraînement.')
-    parser.add_argument('--batch_size_image', type=int, default=12, help='Batch size image')
-    parser.add_argument('--batch_size_video', type=int, default=4, help='Batch size video')
-    parser.add_argument('--seq_len', type=int, default=6, help='sequence lenght video')
-    parser.add_argument('--pretrained', type=bool, default=False, help='load pretrained model')
+    parser.add_argument('--batch_size_image', type=int, default=20, help='Batch size image')
+    parser.add_argument('--batch_size_video', type=int, default=5, help='Batch size video')
+    parser.add_argument('--seq_len', type=int, default=12, help='sequence lenght video')
+    parser.add_argument('--pretrained', type=bool, default=True, help='load pretrained model')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
     parser.add_argument('--lr', type=float, default=0.02, help='Taux d\'apprentissage.')
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_2/" , help='path save output')
+    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_v1/" , help='path save output')
     parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
 
 
@@ -71,22 +71,17 @@ if __name__ == "__main__":
 
     for key, v in path_dataset_.items():
         print(key , " " , v)
-
-        if v['type'] == "image" and key == "SALICON":
-            _train = dataloaders.SALICONDataset(path =v['train'], phase="train" )
-            _val = dataloaders.SALICONDataset(path =v['val'], phase="val" )
-
-        if v['type'] == "image" and  key == "Packaging":
-            _train = dataloaders.PACKAGINGDataset(path =v['train'] )
-            _val = dataloaders.PACKAGINGDataset(path =v['val'])
+        if v['type'] == "image":
+            _train = dataloaders.ImageDataset(path =v['train'] )
+            _val = dataloaders.ImageDataset(path =v['val'])
 
         elif v['type'] == "video" and key == "UCFSports":
-            _train = dataloaders.VideoDataset(path = v['path'] + "train/" , seq_len= args.seq_len, frame_modulo= 2,ratio_val_test = 1., phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
-            _val = dataloaders.VideoDataset(path = v['path'] + "val/" , seq_len= args.seq_len, frame_modulo= 2,ratio_val_test=0., phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
+            _train = dataloaders.VideoDataset(path = v['path'] + "train/" , seq_len= args.seq_len, frame_modulo= 3,ratio_val_test = 1., phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
+            _val = dataloaders.VideoDataset(path = v['path'] + "val/" , seq_len= args.seq_len, frame_modulo= 3,ratio_val_test=0., phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
         elif v['type'] == "video":
-            _train = dataloaders.VideoDataset(path = v['path'], limit=10 , seq_len= args.seq_len, frame_modulo= 3, phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
-            _val = dataloaders.VideoDataset(path = v['path'], limit=3 , seq_len= args.seq_len, frame_modulo= 3, phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
+            _train = dataloaders.VideoDataset(path = v['path'], seq_len= args.seq_len, frame_modulo= 3, phase= "train" , extension=v['extension'], img_dir = v['img_dir'])
+            _val = dataloaders.VideoDataset(path = v['path'] , seq_len= args.seq_len, frame_modulo= 3, phase= "val" , extension=v['extension'], img_dir = v['img_dir'])
 
         batch_size = args.batch_size_video if v['type'] == "video" else args.batch_size_image
         print(f" - Batch size {batch_size}")

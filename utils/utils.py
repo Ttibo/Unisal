@@ -5,7 +5,7 @@ import copy
 import sys
 import importlib
 import time
-
+import math
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -136,6 +136,8 @@ def nss(pred, fixations):
         results.append(nss_)
     results = torch.stack(results)
     results = results.reshape(size[:2]) 
+
+    # print(results)
     return results
 
 def corr_coeff(pred, target):
@@ -155,6 +157,10 @@ def corr_coeff(pred, target):
 
     cc = torch.stack(cc)
     cc = cc.reshape(size[:2])
+
+
+    # if math.isnan(loss):
+
     return cc  # 1 - torch.square(r)
 
 

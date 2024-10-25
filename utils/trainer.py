@@ -8,7 +8,6 @@ import numpy as np
 from pathlib import Path
 from torch.utils.data import Dataset, DataLoader
 from itertools import chain
-from tqdm import tqdm
 import utils.utils as utils
 import torch
 import json
@@ -21,6 +20,24 @@ elif torch.backends.mps.is_available():
     DEFAULT_DEVICE = torch.device("mps")
 else:
     DEFAULT_DEVICE = torch.device("cpu")
+
+
+import sys
+import time
+
+# Fonction pour afficher la barre de progression avec timer
+def loading_bar(total, current, start_time,text = "Batches", bar_length=30):
+    percent = current / total
+    arrow = '█' * int(percent * bar_length)
+    spaces = ' ' * (bar_length - len(arrow))
+
+    # Calcule le temps écoulé
+    elapsed_time = time.time() - start_time
+    elapsed_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+
+    # Affiche la barre de progression avec le timer
+    sys.stdout.write(f'\r{text}: |{arrow}{spaces}| {int(percent * 100)}% - timer: {elapsed_str}')
+    sys.stdout.flush()
 
 class Trainer():
     def __init__(
@@ -142,12 +159,6 @@ class Trainer():
         }
         n_samples = {key: 0 for key, _ in self.dataloaders.items()}
 
-
-
-        # Initialise la liste `all_batches`
-        all_batches = []
-
-
         all_batches = [
             src
             for src in chain.from_iterable(
@@ -177,32 +188,32 @@ class Trainer():
                 self.model.cnn.eval()
 
 
+        start_time = time.time()
         data_iters = {key: iter(v[self.phase]) for key, v in self.dataloaders.items()}
+        for sample_idx, src in enumerate(all_batches):
+
+            loading_bar(text = f"{self.phase} Batches ",current=sample_idx ,total=len(all_batches),bar_length=40, start_time=start_time)
+            # Get the next batch
+            sample = next(data_iters[src])
+
+            loss, loss_summands, batch_size = self.fit_sample(
+                src,
+                sample,
+                grad_clip=self.grad_clip
+            )
+
+            running_losses[src] += loss * batch_size
+            running_loss_summands[src] = [
+                r + l * batch_size
+                for r, l in zip(running_loss_summands[src], loss_summands)
+            ]
+            n_samples[src] += batch_size
 
 
-        with tqdm(total=len(all_batches), desc=f"{self.phase} Batch", unit="Batch") as pbar:
-            for _, src in enumerate(all_batches):
-                # Get the next batch
-                sample = next(data_iters[src])
 
-                loss, loss_summands, batch_size = self.fit_sample(
-                    src,
-                    sample,
-                    grad_clip=self.grad_clip
-                )
-
-                running_losses[src] += loss * batch_size
-                running_loss_summands[src] = [
-                    r + l * batch_size
-                    for r, l in zip(running_loss_summands[src], loss_summands)
-                ]
-                n_samples[src] += batch_size
-
-                pbar.update(1)
-
-
-        loss_global_ = 0.
-        loss_object_ = {}
+        loss_object_ = {
+            'global' : 0.
+        }
         for key , v in self.dataloaders.items():
             phase_loss = running_losses[key] / n_samples[key]
             phase_loss_summands = [
@@ -225,39 +236,10 @@ class Trainer():
             for idx, loss_ in zip(self.loss_metrics, phase_loss_summands):
                 loss_object_[key]['losses'][idx] =loss_
 
-
-            loss_global_ += phase_loss
-        loss_global_ /= len(self.dataloaders)
-
-        loss_object_['global'] = loss_global_
+            loss_object_['global'] += phase_loss
+        loss_object_['global'] /= len(self.dataloaders)
 
         return loss_object_
-
-
-
-        # print(f"GLOBAl LOSS {loss_global_}")
-
-        # if (
-        #     self.phase == "val"
-        #     # and self.epoch >= self.chkpnt_warmup
-        # ):
-        #     val_score = -loss_global_
-        #     if self.best_val_score is None:
-        #         self.best_val_score = val_score
-        #     elif val_score > self.best_val_score:
-        #         print("      - UPADTE BEST WEIGHTS")
-        #         self.best_val_score = val_score
-        #         self.model.save_weights(self.train_dir, "best")
-        #         with open(self.train_dir / "best_epoch.dat", "w") as f:
-        #             f.write(str(self.epoch))
-        #         with open(self.train_dir / "best_val_loss.dat", "w") as f:
-        #             f.write(str(val_score))
-
-        #         json_object = json.dumps({'metrics' : self.loss_metrics , 'loss' : running_loss_summands}, indent=4)
-        #         with open(self.train_dir / "losses.json" , "w") as f:
-        #             f.write(json_object)
-
-
 
     def fit_sample(self,loader_name, sample, grad_clip=None):
         """

@@ -1,13 +1,13 @@
 import os
 
 DATASET_PATHS_LOCAL = {
-    # 'Packaging': {
+    # 'SALICON': {
     #     'type' : 'image',
     #     'train': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/SALICON/",
     #     'val': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/SALICON/",
     #     'extension' : "jpg"
     # },
-    'Packaging': {
+    'SALICON': {
         'type' : 'image',
         'train': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/train/",
         'val': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/val/",
@@ -25,7 +25,7 @@ DATASET_PATHS_LOCAL = {
     #     'extension' : "png",
     #     'img_dir' : "images"
     # },
-    'Advertising': {
+    'DHF1K': {
         'type' : 'video',
         'path': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Ittention_advertising_video/",
         'extension' : "jpg",

@@ -13,7 +13,7 @@ def normalize_tensor(tensor, rescale=False):
     tsum = tensor.sum()
     return tensor / tsum if tsum > 0 else tensor.fill_(1. / tensor.numel())
 
-class PACKAGINGDataset(Dataset):
+class ImageDataset(Dataset):
     n_train_val_images = 64
     dynamic = False
 
