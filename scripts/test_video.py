@@ -24,6 +24,7 @@ if __name__ == "__main__":
     model_path = "/weights/packging_3s/weights_best.pth"
     model_path = "/weights/video_test/weights_best.pth"
     model_path = "../weights/weights_best.pth"
+    model_path = "../weights/fine_tune_ittention_v1/weights_best.pth"
     # model_path = "../weights/Train_packging_advertising/weights_best.pth"
 
     path_ = os.path.dirname(os.path.abspath(__file__))
@@ -46,27 +47,24 @@ if __name__ == "__main__":
     size_package = 4
     h0 = [None]
     total_frames = len(videopath.frames) 
-    with tqdm(total=total_frames, desc="Traitement des frames", unit="frame") as pbar:
-        while True:
-            this_frame_seq =  videopath.get_packages_of_frames(size=size_package)
+    while True:
+        this_frame_seq =  videopath.get_packages_of_frames(size=size_package)
 
-            if this_frame_seq is None:
-                break
+        if this_frame_seq is None:
+            break
 
-            # print(f"Package {this_frame_seq.shape}")
-            this_frame_seq = this_frame_seq.to(DEFAULT_DEVICE).unsqueeze(0)
+        # print(f"Package {this_frame_seq.shape}")
+        this_frame_seq = this_frame_seq.to(DEFAULT_DEVICE).unsqueeze(0)
 
-            this_pred_seq, h0 = model(
-                this_frame_seq, return_hidden=True
-            )
+        this_pred_seq, h0 = model(
+            this_frame_seq, return_hidden=True, source = "Hollywood"
+        )
 
-            pbar.update(this_pred_seq.shape[1])
 
-            this_pred_seq = this_pred_seq.squeeze(0).detach().cpu().numpy()
-            for i in range(0 , this_pred_seq.shape[0]):
-                frames_predic.append(this_pred_seq[i])
+        this_pred_seq = this_pred_seq.squeeze(0).detach().cpu().numpy()
+        for i in range(0 , this_pred_seq.shape[0]):
+            frames_predic.append(this_pred_seq[i])
 
-            pbar.update(1)
             
     for i in range(0 , len(frames_predic)):
 
