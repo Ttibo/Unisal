@@ -6,11 +6,11 @@ import os
 import cv2
 import torch
 import numpy as np
-import onnxruntime as ort  # Utilisation d'ONNX Runtime
 import matplotlib.pyplot as plt
 
 import model
 import dataloaders
+import json
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -20,22 +20,19 @@ else:
     DEFAULT_DEVICE = torch.device("cpu")
 
 
-# Déterminer le dispositif par défaut
-if ort.get_device() == 'GPU':
-    DEFAULT_DEVICE_ONNX = 'CUDAExecutionProvider'
-else:
-    DEFAULT_DEVICE_ONNX = 'CPUExecutionProvider'
-
-
 class Saliency:
-    def __init__(self , pathModelOnnx: str = "/weights/packging_3s/weights_best.onnx" , pathModel : str = "/weights/packging_3s/weights_best.pth"):
+    def __init__(self  , pathModel : str = "/weights/packging_3s/weights_best.pth"):
         # assert(os.path.isfile(pathModel) == True) , 'Error path model, file doesn\'t exist'
 
-        self.path_ = os.path.dirname(os.path.abspath(__file__))
-        self.model = model.UNISAL(bypass_rnn=True)
+        assert( os.path.exists(pathModel)) , " Error folder model weights"
 
-        print("PathModel " , pathModel)
-        self.model.load_weights(pathModel)
+        with open(pathModel + "sources.json", 'r') as file:
+            sources = json.load(file) 
+
+        self.path_ = os.path.dirname(os.path.abspath(__file__))
+        self.model = model.UNISAL(bypass_rnn=False, sources=sources)
+
+        self.model.load_weights(pathModel + "weights_best.pth")
         self.model.to(DEFAULT_DEVICE)
 
         # Charger le modèle ONNX avec ONNX Runtime
@@ -67,22 +64,6 @@ class Saliency:
         axs[2].set_title('Map')
         axs[2].axis('off')
 
-    def runOnnx(self , pathImage : str ) -> np.ndarray:
-
-        img = cv2.imread(str(pathImage))
-        img_ , size_ = dataloaders.open_image(pathImage)
-        map_ = self.image_inference_onnx(img_ )
-
-        smap = np.exp(map_)
-        smap = np.squeeze(smap)
-        smap = smap
-        map_ = (smap / np.amax(smap) * 255).astype(np.uint8)
-        map_ = cv2.resize(map_ , (img.shape[1] , img.shape[0]))
-        
-        predicted_colored = cv2.cvtColor(map_.astype(np.uint8) , cv2.COLORMAP_JET)
-        res_ = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.3, cv2.cvtColor(predicted_colored, cv2.COLOR_BGR2RGB), 0.7, 0.0)
-
-        self.show_maps(img , map_ , res_)
 
     def run(self , pathImage : str ) -> np.ndarray:
 
@@ -123,7 +104,7 @@ class Saliency:
 
 if __name__ == "__main__":
     file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/image_1.jpg"
-    saliency_ = Saliency(pathModelOnnx="/weights/packging_3s/unisal_model.onnx" , pathModel = "/weights/Train_packging_advertising/weights_best.pth")
+    saliency_ = Saliency(pathModel = "../weights/fine_tune_ittention_v1/")
     saliency_.run(file_)
 
     plt.show()

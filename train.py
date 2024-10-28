@@ -31,11 +31,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Trainer for the model.')
 
     # Ajoutez les arguments pour le Trainer
-    parser.add_argument('--num_epochs', type=int, default=55, help='Nombre d\'époques pour l\'entraînement.')
+    parser.add_argument('--num_epochs', type=int, default=40, help='Nombre d\'époques pour l\'entraînement.')
     parser.add_argument('--batch_size_image', type=int, default=20, help='Batch size image')
     parser.add_argument('--batch_size_video', type=int, default=5, help='Batch size video')
-    parser.add_argument('--seq_len', type=int, default=12, help='sequence lenght video')
-    parser.add_argument('--pretrained', type=bool, default=False, help='load pretrained model')
+    parser.add_argument('--seq_len', type=int, default=18, help='sequence lenght video')
+    parser.add_argument('--pretrained', type=bool, default=True, help='load pretrained model')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
     parser.add_argument('--lr', type=float, default=0.03, help='Taux d\'apprentissage.')
@@ -43,15 +43,15 @@ if __name__ == "__main__":
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Facteur gamma pour le planificateur de taux d\'apprentissage.')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Poids de décroissance pour l\'optimiseur.')
     parser.add_argument('--cnn_weight_decay', type=float, default=1e-5, help='Poids de décroissance pour le CNN.')
-    parser.add_argument('--train_cnn_after', type=int, default=5, help='Nombres epochs pour commencer à entrainer l encoder')
+    parser.add_argument('--train_cnn_after', type=int, default=0, help='Nombres epochs pour commencer à entrainer l encoder')
     parser.add_argument('--grad_clip', type=float, default=2.0, help='Valeur de coupure de gradient.')
     parser.add_argument('--cnn_lr_factor', type=float, default=0.1, help='Facteur de taux d\'apprentissage pour le CNN.')
     parser.add_argument('--loss_metrics', type=str, nargs='+', default=["kld", "nss", "cc"], help='Métriques de perte à utiliser.')
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/model_ittention_v1/" , help='path save output')
-    parser.add_argument('--setting', type=str, default="server" , help='local or server setting')
+    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_v1/" , help='path save output')
+    parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
 
 
     # Analysez les arguments
@@ -72,11 +72,12 @@ if __name__ == "__main__":
     for key, v in path_dataset_.items():
         print(key , " " , v)
 
-        if v['type'] == "image" and key == "SALICON":
-            _train = dataloaders.SALICONDataset(path =v['train'], phase="train" )
-            _val = dataloaders.SALICONDataset(path =v['val'], phase="val" )
+        # if v['type'] == "image" and key == "SALICON":
+        #     _train = dataloaders.SALICONDataset(path =v['train'], phase="train" )
+        #     _val = dataloaders.SALICONDataset(path =v['val'], phase="val" )
 
-        elif v['type'] == "image":
+        # elif v['type'] == "image":
+        if v['type'] == "image":
             _train = dataloaders.ImageDataset(path =v['train'] )
             _val = dataloaders.ImageDataset(path =v['val'])
 

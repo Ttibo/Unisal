@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 
     # hidden state for RNN video
-    size_package = 4
+    size_package = 1
     h0 = [None]
     total_frames = len(videopath.frames) 
     while True:
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         this_frame_seq = this_frame_seq.to(DEFAULT_DEVICE).unsqueeze(0)
 
         this_pred_seq, h0 = model(
-            this_frame_seq, return_hidden=True, source = "Hollywood"
+            this_frame_seq, return_hidden=True, source = "DHF1K"
         )
 
 

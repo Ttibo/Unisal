@@ -47,7 +47,7 @@ class Trainer():
         model ,
         path ,
 
-        num_epochs=100,
+        num_epochs=50,
         optim_algo="SGD",
         momentum=0.9,
         lr=0.04,
@@ -61,7 +61,7 @@ class Trainer():
         loss_weights=(1, -0.1, -0.1),
         chkpnt_warmup=2,
         chkpnt_epochs=2,
-        train_cnn_after= 100,
+        train_cnn_after= 10,
 
     ):
         self.dataloaders = dataloaders
