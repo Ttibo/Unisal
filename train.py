@@ -33,8 +33,8 @@ if __name__ == "__main__":
     # Ajoutez les arguments pour le Trainer
     parser.add_argument('--num_epochs', type=int, default=40, help='Nombre d\'époques pour l\'entraînement.')
     parser.add_argument('--batch_size_image', type=int, default=20, help='Batch size image')
-    parser.add_argument('--batch_size_video', type=int, default=5, help='Batch size video')
-    parser.add_argument('--seq_len', type=int, default=18, help='sequence lenght video')
+    parser.add_argument('--batch_size_video', type=int, default=4, help='Batch size video')
+    parser.add_argument('--seq_len', type=int, default=15, help='sequence lenght video')
     parser.add_argument('--pretrained', type=bool, default=True, help='load pretrained model')
     parser.add_argument('--optim_algo', type=str, default="SGD", help='Algorithme d\'optimisation.')
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum pour l\'optimiseur.')
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
     parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_v2/" , help='path save output')
-    parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
+    parser.add_argument('--setting', type=str, default="server" , help='local or server setting')
 
 
     # Analysez les arguments

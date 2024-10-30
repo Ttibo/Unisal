@@ -35,31 +35,31 @@ DATASET_PATHS_LOCAL = {
 
 
 DATASET_PATHS_SERVER = {
+    # 'SALICON': {
+    #     'type' : 'image',
+    #     'train': "/home/LelongT/Dataset/SALICON/",
+    #     'val': "/home/LelongT/Dataset/SALICON/",
+    #     'extension' : "jpg"
+    # },
     'SALICON': {
         'type' : 'image',
-        'train': "/home/LelongT/Dataset/SALICON/",
-        'val': "/home/LelongT/Dataset/SALICON/",
+        'train': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/train/",
+        'val': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/val/",
         'extension' : "jpg"
     },
-    'Packaging': {
-        'type' : 'image',
-        'train': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/train/",
-        'val': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/val/",
-        'extension' : "jpg"
-    },
-    'Naturel': {
-        'type' : 'video',
-        'path': "/home/LelongT/Dataset/DHF1K/",
-        'extension' : "jpg",
-        'img_dir' : "images"
-    },
-    'UCFSports': {
-        'type' : 'video',
-        'path': "/home/LelongT/Dataset/ucf_sports_actions/",
-        'extension' : "png",
-        'img_dir' : "images"
-    },
-    'Advertising': {
+    # 'Naturel': {
+    #     'type' : 'video',
+    #     'path': "/home/LelongT/Dataset/DHF1K/",
+    #     'extension' : "jpg",
+    #     'img_dir' : "images"
+    # },
+    # 'UCFSports': {
+    #     'type' : 'video',
+    #     'path': "/home/LelongT/Dataset/ucf_sports_actions/",
+    #     'extension' : "png",
+    #     'img_dir' : "images"
+    # },
+    'DHF1K': {
         'type' : 'video',
         'path': "/home/LelongT/Dataset/ittention_advertising_video/",
         'extension' : "jpg",

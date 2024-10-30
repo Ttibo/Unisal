@@ -58,8 +58,11 @@ class VideoDataset(Dataset):
         self.phase = phase
         self.extension = extension
         self.load_data()
-        self.img_size = (288, 512)
-        self.target_size =(516, 1024)
+        # self.img_size = (288, 512)
+        # self.target_size =(516, 1024)
+
+        self.img_size = (288,416)
+        self.target_size = (360,520)
 
     def load_data(self):
         self.all_video_folders = []

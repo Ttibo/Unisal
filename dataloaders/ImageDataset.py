@@ -29,7 +29,7 @@ class ImageDataset(Dataset):
         self.dir = Path(path)
         self.all_image_files, self.size_dict = self.load_data()
         self.img_size = (288,416)
-        self.target_size = (288,416)
+        self.target_size = (360,520)
 
     def get_map(self, img_idx):
         map_file = self.sal_dir / self.all_image_files[img_idx]['map']
@@ -99,7 +99,7 @@ class ImageDataset(Dataset):
         sal = self.preprocess(self.get_map(img_idx), out_size=self.target_size, data='sal')
         fix = self.preprocess(self.get_fixation_map(img_idx), out_size=self.target_size, data='fix')
 
-        return img, sal, fix, self.size_dict[img_idx]['img_size']
+        return img, sal, fix, self.target_size
 
     def __getitem__(self, idx):
         return self.get_data(idx)
