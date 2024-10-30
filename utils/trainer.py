@@ -138,11 +138,11 @@ class Trainer():
                 self.save_best(losses_)
 
             # Save a checkpoint if applicable
-            if (
-                self.epoch >= self.chkpnt_warmup
-                and (self.epoch + 1) % self.chkpnt_epochs == 0
-            ) or self.epoch == self.num_epochs - 1:
-                self.save_chkpnt(losses_)
+            # if (
+            #     self.epoch >= self.chkpnt_warmup
+            #     and (self.epoch + 1) % self.chkpnt_epochs == 0
+            # ) or self.epoch == self.num_epochs - 1:
+            self.save_chkpnt(losses_)
 
             self.epoch += 1
 
@@ -316,6 +316,7 @@ class Trainer():
                 losses.append(utils.nss(pred_seq.exp(), fix_seq))
             if this_metric == "cc":
                 losses.append(utils.corr_coeff(pred_seq.exp(), sal_seq))
+
         return losses
 
 
