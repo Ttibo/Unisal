@@ -43,8 +43,8 @@ DATASET_PATHS_SERVER = {
     # },
     'SALICON': {
         'type' : 'image',
-        'train': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/train/",
-        'val': "/home/LelongT/Dataset/Packaging_delta_3_sigma_20/val/",
+        'train': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/train/",
+        'val': "/home/LelongT/Dataset/Packaging_delta_1_sigma_20/val/",
         'extension' : "jpg"
     },
     # 'Naturel': {

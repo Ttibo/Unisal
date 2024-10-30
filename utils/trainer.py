@@ -192,7 +192,7 @@ class Trainer():
         data_iters = {key: iter(v[self.phase]) for key, v in self.dataloaders.items()}
         for sample_idx, src in enumerate(all_batches):
 
-            loading_bar(text = f"{self.phase} Batches ",current=sample_idx ,total=len(all_batches),bar_length=40, start_time=start_time)
+            loading_bar(text = f"{self.phase} Batches ",current=sample_idx + 1,total=len(all_batches),bar_length=40, start_time=start_time)
             # Get the next batch
             sample = next(data_iters[src])
 
