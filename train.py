@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--loss_weights', type=float, nargs='+', default=[1, -0.1, -0.1], help='Poids des métriques de perte.')
     parser.add_argument('--chkpnt_warmup', type=int, default=2, help='Époques de montée en température pour le point de contrôle.')
     parser.add_argument('--chkpnt_epochs', type=int, default=2, help='Nombre d\'époques pour sauvegarder le point de contrôle.')
-    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_v1/" , help='path save output')
+    parser.add_argument('--path_save', type=str, default="./weights/fine_tune_ittention_v2/" , help='path save output')
     parser.add_argument('--setting', type=str, default="local" , help='local or server setting')
 
 

@@ -58,6 +58,8 @@ class VideoDataset(Dataset):
         self.phase = phase
         self.extension = extension
         self.load_data()
+        self.img_size = (288, 512)
+        self.target_size =(516, 1024)
 
     def load_data(self):
         self.all_video_folders = []
@@ -85,6 +87,8 @@ class VideoDataset(Dataset):
             self.all_video_folders = self.all_video_folders[0:int(len(self.all_video_folders)*self.ratio_val_test)]
         elif self.phase == "val":
             self.all_video_folders = self.all_video_folders[int(len(self.all_video_folders)*self.ratio_val_test):]
+
+
 
     def load_frames(self, folder):
         
@@ -116,7 +120,8 @@ class VideoDataset(Dataset):
        
         ar = img_size[0] / img_size[1]
         best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
-        return  (288, 384)
+
+        # print(best_size)
         return tuple(r * 32 for r in best_size)
 
     def get_frame_nrs(self,vid):
@@ -143,13 +148,13 @@ class VideoDataset(Dataset):
         for i in frame_indices:
             img = cv2.imread(str(frames[i]))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img_tensor = self.preprocess(img, out_size=self.get_out_size(img.shape), data='img')
+            img_tensor = self.preprocess(img, out_size=self.img_size, data='img')
 
             sal = cv2.imread(str(saliency_maps[i]), cv2.IMREAD_GRAYSCALE)
-            sal_tensor = self.preprocess(sal, out_size=self.get_out_size(img.shape), data='sal')
+            sal_tensor = self.preprocess(sal, out_size=self.target_size, data='sal')
 
             fix = cv2.imread(str(fixation_maps[i]), cv2.IMREAD_GRAYSCALE)
-            fix_tensor = self.preprocess(fix, out_size=self.get_out_size(img.shape), data='fix')
+            fix_tensor = self.preprocess(fix, out_size=self.target_size, data='fix')
 
             video_frames.append(img_tensor)
             saliency_frames.append(sal_tensor)
@@ -162,7 +167,7 @@ class VideoDataset(Dataset):
 
 
         # print(f"Tensors video {video_tensor.shape} : saliency {saliency_tensor.shape} : fixation {fixation_tensor.shape}")
-        return video_tensor , saliency_tensor , fixation_tensor, (224,224)
+        return video_tensor , saliency_tensor , fixation_tensor,self.target_size 
 
     def __len__(self):
         return len(self.all_video_folders)

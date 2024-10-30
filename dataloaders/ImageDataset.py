@@ -28,6 +28,8 @@ class ImageDataset(Dataset):
             self.preproc_cfg.update(preproc_cfg)
         self.dir = Path(path)
         self.all_image_files, self.size_dict = self.load_data()
+        self.img_size = (288,416)
+        self.target_size = (288,416)
 
     def get_map(self, img_idx):
         map_file = self.sal_dir / self.all_image_files[img_idx]['map']
@@ -57,7 +59,7 @@ class ImageDataset(Dataset):
         ar = img_size[0] / img_size[1]
         best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
 
-        return (480,288)
+        return (288,416)
         return tuple(r * 32 for r in best_size)
 
     def load_data(self):
@@ -69,7 +71,8 @@ class ImageDataset(Dataset):
                 'pts': img_file.stem + "_fixPts.jpg",
             })
 
-        size_dict = {i: {'img_size': cv2.imread(str(self.img_dir / f['img'])).shape[:2]} for i, f in enumerate(all_image_files)}
+        # size_dict = {i: {'img_size': cv2.imread(str(self.img_dir / f['img'])).shape[:2]} for i, f in enumerate(all_image_files)}
+        size_dict = {i: {'img_size': (416, 600)} for i, f in enumerate(all_image_files)}
         return all_image_files, size_dict
 
     def __len__(self):
@@ -92,9 +95,10 @@ class ImageDataset(Dataset):
         return transforms.Compose(transformations)(img)
 
     def get_data(self, img_idx):
-        img = self.preprocess(self.get_img(img_idx), out_size=self.get_out_size(self.size_dict[img_idx]['img_size']))
-        sal = self.preprocess(self.get_map(img_idx), out_size=self.get_out_size(self.size_dict[img_idx]['img_size']), data='sal')
-        fix = self.preprocess(self.get_fixation_map(img_idx), out_size=self.get_out_size(self.size_dict[img_idx]['img_size']), data='fix')
+        img = self.preprocess(self.get_img(img_idx), out_size=self.img_size)
+        sal = self.preprocess(self.get_map(img_idx), out_size=self.target_size, data='sal')
+        fix = self.preprocess(self.get_fixation_map(img_idx), out_size=self.target_size, data='fix')
+
         return img, sal, fix, self.size_dict[img_idx]['img_size']
 
     def __getitem__(self, idx):

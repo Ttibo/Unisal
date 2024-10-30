@@ -248,7 +248,7 @@ class Trainer():
         """
 
         with torch.set_grad_enabled(self.phase == "train"):
-            x, sal, fix, _ = sample
+            x, sal, fix, target_size = sample
 
             # Add temporal dimension to image data
             if x.dim() == 4:
@@ -276,9 +276,11 @@ class Trainer():
             # Run forward pass
             pred_seq = self.model(
                 x = x,
-                source = loader_name
+                source = loader_name,
+                target_size = target_size
                 )
 
+            
             # Compute the total loss
             loss_summands = self.loss_sequences(
                 pred_seq, sal, fix, metrics=self.loss_metrics
