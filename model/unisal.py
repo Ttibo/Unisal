@@ -495,9 +495,9 @@ class UNISAL(BaseModel):
 
         if target_size is None:
             target_size = x.shape[-2:]
-        else : 
-            if target_size[0].shape != 1:
-                target_size = [target_size[0][0] , target_size[1][0]]
+        # else : 
+        #     if target_size[0].shape != 1:
+        #         target_size = [target_size[0][0] , target_size[1][0]]
 
 
         # Set the current source for the domain-specific BatchNorm modules
