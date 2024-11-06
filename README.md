@@ -78,6 +78,26 @@ Data structure for training:
 ![Exemple 2](ressources/exemple_2.png)
 
 
+Create setting.py for databases informations
+````
+
+DATASET_PATHS = {
+
+    'Name Database': {
+        'source' : 'type sources if finetune Unisal [SALICON , DHF1K, UCFSport etc ..] else as you want',
+        'type' : 'Image or Video',
+        'train': "path train dataset",
+        'val': "path val dataset",
+        'extension' : "jpg / png / jpeg extensions images",
+        'input_size' : (W,H) dimension input size,
+        'target_size' : (W,H) dimensio target size
+    },
+}
+
+
+````
+
+
 
 ## Example Usage
 

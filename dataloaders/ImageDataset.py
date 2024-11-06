@@ -17,19 +17,25 @@ class ImageDataset(Dataset):
     n_train_val_images = 64
     dynamic = False
 
-    def __init__(self, path, subset=None, verbose=1, preproc_cfg=None):
-        self.subset = subset
-        self.verbose = verbose
+    def __init__(
+            self,
+            path,
+            preproc_cfg=None,
+            input_size = (412,412),
+            target_size = (512,512)
+        ):
+
         self.preproc_cfg = {
             'rgb_mean': (0.485, 0.456, 0.406),
             'rgb_std': (0.229, 0.224, 0.225),
         }
+
         if preproc_cfg is not None:
             self.preproc_cfg.update(preproc_cfg)
         self.dir = Path(path)
         self.all_image_files, self.size_dict = self.load_data()
-        self.img_size = (288,416)
-        self.target_size = (360,520)
+        self.img_size = input_size
+        self.target_size = target_size
 
     def get_map(self, img_idx):
         map_file = self.sal_dir / self.all_image_files[img_idx]['map']
@@ -49,18 +55,6 @@ class ImageDataset(Dataset):
     def sal_dir(self): return self.dir / 'maps'
     @property
     def img_dir(self): return self.dir / 'images'
-
-    def get_out_size(self, img_size, train=True):
-        if train:
-            selection = [(8, 13), (9, 13), (9, 12), (12, 9), (13, 9)]
-        else:
-            selection = [(n1, n2) for n1 in range(7, 14) for n2 in range(7, 14) if 100 <= n1 * n2 <= 120]
-        
-        ar = img_size[0] / img_size[1]
-        best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
-
-        return (288,416)
-        return tuple(r * 32 for r in best_size)
 
     def load_data(self):
         all_image_files = []

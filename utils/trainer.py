@@ -62,6 +62,7 @@ class Trainer():
         chkpnt_warmup=2,
         chkpnt_epochs=2,
         train_cnn_after= 10,
+        cnn_layers_train= 0
 
     ):
         self.dataloaders = dataloaders
@@ -81,7 +82,7 @@ class Trainer():
         self.model = model
         self.chkpnt_warmup = chkpnt_warmup
         self.chkpnt_epochs = chkpnt_epochs
-
+        self.cnn_layers_train = cnn_layers_train
         self.phases = ("train", "val")
         self.train_cnn_after = train_cnn_after
         self.cnn_eval = True
@@ -99,6 +100,36 @@ class Trainer():
 
         if os.path.exists(self.train_dir / 'checkpoints' ) == False:
             os.mkdir(self.train_dir / 'checkpoints')
+
+        # save params
+        params_ = {
+
+            'num_epochs' : num_epochs,
+            'optim_algo' : optim_algo,
+            'momentum' : momentum,
+            'lr' : lr,
+            'lr_scheduler' : lr_scheduler,
+            'lr_gamma' : lr_gamma,
+            'weight_decay' : weight_decay,
+            'cnn_weight_decay' : cnn_weight_decay,
+            'grad_clip' : grad_clip,
+            'loss_metrics' : loss_metrics,
+            'loss_weights' : loss_weights,
+            'cnn_lr_factor' : cnn_lr_factor,
+            'chkpnt_warmup' : chkpnt_warmup,
+            'chkpnt_epochs' : chkpnt_epochs,
+            'train_cnn_after' : train_cnn_after,
+            'loss_weights' : (1,-0.1 , -0.1),
+            'cnn_layers_train' : cnn_layers_train,
+            'datasets' : [{key : v['information']} for key, v in dataloaders.items()]
+
+        }
+
+        with open(path + "params.json", "w") as outfile:
+            json.dump(params_, outfile, indent=4, ensure_ascii=False)
+
+
+
 
         self.epoch = 0
         self.phase = None
@@ -137,13 +168,7 @@ class Trainer():
                 score_ = losses_['val']['global']
                 self.save_best(losses_)
 
-            # Save a checkpoint if applicable
-            # if (
-            #     self.epoch >= self.chkpnt_warmup
-            #     and (self.epoch + 1) % self.chkpnt_epochs == 0
-            # ) or self.epoch == self.num_epochs - 1:
             self.save_chkpnt(losses_)
-
             self.epoch += 1
 
     def fit_phase(self):
@@ -182,22 +207,34 @@ class Trainer():
         # Switch CNN gradients on/off and set CNN eval mode (for BN modules)
         if self.phase == "train":
             cnn_grad = self.epoch >= self.train_cnn_after
-            for param in self.model.cnn.parameters():
-                param.requires_grad = cnn_grad
-            if self.cnn_eval:
-                self.model.cnn.eval()
+            # for param in self.model.cnn.parameters():
+                # print(param)
+                # param.requires_grad = cnn_grad
+            # for name, param in self.model.cnn.named_parameters():
+            #     print(f"Layer: {name}")
+            #     param.requires_grad = cnn_grad
 
+            layer_index = 0  # Compteur pour suivre l'index des couches
+
+            for name, param in self.model.cnn.named_parameters():
+                if "features" in name:  # Assure que seul les paramètres de features sont pris en compte
+                    if layer_index >= self.cnn_layers_train:
+                        param.requires_grad = cnn_grad
+                    else:
+                        param.requires_grad = False
+                    layer_index += 1  # Incrémente après chaque paramètre
 
         start_time = time.time()
-        data_iters = {key: iter(v[self.phase]) for key, v in self.dataloaders.items()}
+        data_iters = {key: {'data' : iter(v[self.phase]) , 'source' : v['information']['source']} for key, v in self.dataloaders.items()}
+
         for sample_idx, src in enumerate(all_batches):
 
             loading_bar(text = f"{self.phase} Batches ",current=sample_idx + 1,total=len(all_batches),bar_length=40, start_time=start_time)
             # Get the next batch
-            sample = next(data_iters[src])
+            sample = next(data_iters[src]['data'])
 
             loss, loss_summands, batch_size = self.fit_sample(
-                src,
+                data_iters[src]['source'],
                 sample,
                 grad_clip=self.grad_clip
             )

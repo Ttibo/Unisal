@@ -38,7 +38,9 @@ class VideoDataset(Dataset):
             sal_dir = "maps",
             img_dir = "images",
             ratio_val_test = 0.858,
-            limit= None
+            limit= None,
+            input_size= (412,412),
+            target_size= (512,(12))
             ):
         self.ratio_val_test = ratio_val_test 
         self.fix_dir = fix_dir
@@ -61,8 +63,8 @@ class VideoDataset(Dataset):
         # self.img_size = (288, 512)
         # self.target_size =(516, 1024)
 
-        self.img_size = (288,416)
-        self.target_size = (360,520)
+        self.img_size = input_size
+        self.target_size = target_size
 
     def load_data(self):
         self.all_video_folders = []
@@ -92,7 +94,6 @@ class VideoDataset(Dataset):
             self.all_video_folders = self.all_video_folders[int(len(self.all_video_folders)*self.ratio_val_test):]
 
 
-
     def load_frames(self, folder):
         
         frames = sorted((Path(folder['img'])).glob(f"*.{self.extension}"), key=lambda f: extract_decimal(f.name))
@@ -114,18 +115,6 @@ class VideoDataset(Dataset):
         elif data == 'fix':
             transformations.append(transforms.Lambda(lambda fix: torch.gt(fix, 0.1)))
         return transforms.Compose(transformations)(img)
-
-    def get_out_size(self, img_size, train=True):
-        if train:
-            selection = [(8, 13), (9, 13), (9, 12), (12, 9), (13, 9)]
-        else:
-            selection = [(n1, n2) for n1 in range(7, 14) for n2 in range(7, 14) if 100 <= n1 * n2 <= 120]
-       
-        ar = img_size[0] / img_size[1]
-        best_size = max(selection, key=lambda s: min(ar, s[0] / s[1]) / max(ar, s[0] / s[1]))
-
-        # print(best_size)
-        return tuple(r * 32 for r in best_size)
 
     def get_frame_nrs(self,vid):
         max_start_index = vid['len'] - (self.seq_len - 1) * (self.frame_modulo + 1)
