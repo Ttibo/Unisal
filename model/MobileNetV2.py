@@ -187,7 +187,6 @@ class MobileNetV2(nn.Module):
             self._initialize_weights()
 
     def load_weights(self, DEFAULT_DEVICE = torch.device("cpu")):
-
             state_dict = torch.load(
                 Path(__file__).resolve().parent / "weights/mobilenet_v2.pth.tar",
                 map_location=DEFAULT_DEVICE,

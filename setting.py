@@ -10,11 +10,11 @@ DATASET_PATHS = {
     'Packaging_3sec': {
         'source' : 'SALICON',
         'type' : 'image',
-        'train': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/train/",
-        'val': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/val/",
+        'train': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_1_sigma_20/train/",
+        'val': "/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_1_sigma_20/val/",
         'extension' : "jpg",
         'input_size' : (412,412),
-        'target_size' : (512,512)
+        'target_size' : (412,412)
     },
     # 'Naturel': {
     #     'type' : 'video',

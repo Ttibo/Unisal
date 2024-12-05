@@ -21,11 +21,7 @@ else:
 
 if __name__ == "__main__":
     # open model
-    model_path = "/weights/packging_3s/weights_best.pth"
-    model_path = "/weights/video_test/weights_best.pth"
-    model_path = "../weights/weights_best.pth"
-    model_path = "../weights/fine_tune_ittention_v1/weights_best.pth"
-    # model_path = "../weights/Train_packging_advertising/weights_best.pth"
+    model_path = "../model/weights/weights_best.pth"
 
     path_ = os.path.dirname(os.path.abspath(__file__))
     model = model.UNISAL(bypass_rnn=False)
@@ -34,7 +30,7 @@ if __name__ == "__main__":
     print(f"Device {DEFAULT_DEVICE}")
     frames_predic = []
 
-    file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/video_0/ff.mp4"
+    file_ = "./inputs/video_1.mp4"
     # file_ = "/Users/coconut/Documents/Video/Building makemore Part 2 MLP.mp4"
     videopath = VideoPath()
     videopath.open_video(

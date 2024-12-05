@@ -21,16 +21,17 @@ else:
 
 
 class Saliency:
-    def __init__(self  , pathModel : str = "/weights/packging_3s/weights_best.pth"):
+    def __init__(self  , pathModel : str ):
         # assert(os.path.isfile(pathModel) == True) , 'Error path model, file doesn\'t exist'
 
         assert( os.path.exists(pathModel)) , " Error folder model weights"
 
-        with open(pathModel + "sources.json", 'r') as file:
-            sources = json.load(file) 
-
-        self.path_ = os.path.dirname(os.path.abspath(__file__))
-        self.model = model.UNISAL(bypass_rnn=False, sources=sources)
+        if os.path.isfile(pathModel + "sources.json"):
+            with open(pathModel + "sources.json", 'r') as file:
+                sources = json.load(file) 
+            self.model = model.UNISAL(bypass_rnn=False, sources=sources)
+        else:
+            self.model = model.UNISAL(bypass_rnn=False)
 
         self.model.load_weights(pathModel + "weights_best.pth")
         self.model.to(DEFAULT_DEVICE)
@@ -86,25 +87,13 @@ class Saliency:
         img_ = img.to(DEFAULT_DEVICE).unsqueeze(0).unsqueeze(0)
         print(img.dtype)
 
-        map_ = self.model(img_)
+        map_ = self.model(img_, source="SALICON")
         return map_.squeeze(0).squeeze(0).squeeze(0).detach().cpu().numpy()
-    
-    def image_inference_onnx(self , img : torch.Tensor ) -> np.ndarray :
-        # Préparer l'entrée pour ONNX
-        img = np.expand_dims(img.numpy(), axis=0)  # Ajouter les dimensions pour ONNX [batch, channels, height, width]
-        img = np.expand_dims(img, axis=0)  # Ajouter les dimensions pour ONNX [batch, channels, height, width]
-        
-        print(img.dtype)
-        # Exécuter le modèle ONNX
-        input_name = self.session.get_inputs()[0].name  # Nom de l'entrée du modèle
-        result = self.session.run(None, {input_name: img})[0]  # Faire l'inférence
-
-        return np.squeeze(result)  # Enlever les dimensions inutiles
     
 
 if __name__ == "__main__":
-    file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/image_1.jpg"
-    saliency_ = Saliency(pathModel = "../weights/fine_tune_ittention_v1/")
+    file_ = "./inputs/test_1.jpg"
+    saliency_ = Saliency(pathModel = "../model/weights/")
     saliency_.run(file_)
 
     plt.show()

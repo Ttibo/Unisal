@@ -115,5 +115,5 @@ Contributions are welcome! Please submit a pull request or open an issue to disc
 - [x] Manage train/val dataloader
 - [x] Clean class
 - [x] Training and video dataloaders
-- [ ] Evaluation model
+- [x] Evaluation model
 - [ ] Modify encoder model

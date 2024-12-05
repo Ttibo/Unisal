@@ -128,9 +128,6 @@ class Trainer():
         with open(path + "params.json", "w") as outfile:
             json.dump(params_, outfile, indent=4, ensure_ascii=False)
 
-
-
-
         self.epoch = 0
         self.phase = None
 
@@ -207,22 +204,23 @@ class Trainer():
         # Switch CNN gradients on/off and set CNN eval mode (for BN modules)
         if self.phase == "train":
             cnn_grad = self.epoch >= self.train_cnn_after
+
             # for param in self.model.cnn.parameters():
-                # print(param)
-                # param.requires_grad = cnn_grad
+            #     param.requires_grad =False 
+
+            for name, param in self.model.cnn.named_parameters():
+                param.requires_grad = False  # Désactive l'entraînement pour cette couche
             # for name, param in self.model.cnn.named_parameters():
             #     print(f"Layer: {name}")
             #     param.requires_grad = cnn_grad
 
-            layer_index = 0  # Compteur pour suivre l'index des couches
+            # Activer les gradients pour les dernières couches (par exemple, la dernière couche de convolution)
+            # On suppose que 'features.18.1' est la dernière couche de ton réseau
 
-            for name, param in self.model.cnn.named_parameters():
-                if "features" in name:  # Assure que seul les paramètres de features sont pris en compte
-                    if layer_index >= self.cnn_layers_train:
-                        param.requires_grad = cnn_grad
-                    else:
-                        param.requires_grad = False
-                    layer_index += 1  # Incrémente après chaque paramètre
+            # Activer les gradients pour les dernières couches
+            for idx in np.arange(self.cnn_layers_train, 19):  # Activer les couches 17 et 18
+                for name, param in self.model.cnn.features[idx].named_parameters():
+                    param.requires_grad = True
 
         start_time = time.time()
         data_iters = {key: {'data' : iter(v[self.phase]) , 'source' : v['information']['source']} for key, v in self.dataloaders.items()}
@@ -356,7 +354,6 @@ class Trainer():
 
         return losses
 
-
     def get_model_parameter_groups(self):
         """
         Get parameter groups.
@@ -449,11 +446,17 @@ class Trainer():
     def scheduler(self):
         """Return the learning rate scheduler"""
         if self._scheduler is None:
-            if self.lr_scheduler == "ExponentialLR":
-                self._scheduler = torch.optim.lr_scheduler.ExponentialLR(
-                    self.optimizer, gamma=self.lr_gamma, last_epoch=self.epoch - 1
-                )
-            else:
-                raise ValueError(f"Unknown scheduler {self.lr_scheduler}")
+
+            lambda1 = lambda epoch: 0.65 ** self.epoch
+            # self._scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda1)
+            self._scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=25, gamma=0.6)
+
+
+            # if self.lr_scheduler == "ExponentialLR":
+            #     self._scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            #         self.optimizer, gamma=self.lr_gamma, last_epoch=self.epoch - 1
+            #     )
+            # else:
+            #     raise ValueError(f"Unknown scheduler {self.lr_scheduler}")
         return self._scheduler
 

@@ -181,8 +181,6 @@ def similarity(s_map, gt):
     return np.sum(np.minimum(s_map, gt))
 
 
-
-
 def load_data(path):
 
     img_dir = path + "images/"
@@ -216,10 +214,10 @@ if __name__ == "__main__":
     print("Eval")
 
     path_ = os.path.dirname(os.path.abspath(__file__))
-    path_dataset ="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_1_sigma_20/val/" 
+    path_dataset ="/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/val/" 
     # dataset = dataloaders.ImageDataset(path =path_dataset)
 
-    pathModel = "../weights/fine_tune_1sec_ittention_v2/"
+    pathModel = "../weights/pack_fine_tune_3sec_ittention_v6/"
     assert( os.path.exists(pathModel)) , " Error folder model weights"
 
     with open(pathModel + "sources.json", 'r') as file:
@@ -231,7 +229,6 @@ if __name__ == "__main__":
     model.to(DEFAULT_DEVICE)
 
 
-
     datas_ = load_data(path_dataset)
 
     preproc_cfg = {
@@ -239,8 +236,8 @@ if __name__ == "__main__":
         'rgb_std': (0.229, 0.224, 0.225),
     }
 
-    img_size = (288,416)
-    target_size = (360,520)
+    img_size = (412,412)
+    target_size = (412,412)
 
     results = {
         "datasets" :[path_dataset],
@@ -272,16 +269,29 @@ if __name__ == "__main__":
     transformations_fix.append(transforms.Lambda(lambda fix: torch.gt(fix, 0.1)))
 
 
+    os.makedirs
+    if os.path.exists(pathModel + "/examples/") == False:
+        os.mkdir(pathModel + "/examples/")
+    
 
 
     global_ = {"sim": [],  "aucj" : []}
 
-    for data in datas_:
+    for idx, data in enumerate(datas_):
         print(data)
 
         img = cv2.imread(str(data['img']))
         map = cv2.imread(data['map'] , cv2.IMREAD_GRAYSCALE)
         fix = cv2.imread(data['pts'] , cv2.IMREAD_GRAYSCALE)
+
+        colormap = cv2.applyColorMap((map).astype(np.uint8), cv2.COLORMAP_JET)
+        colormap = cv2.cvtColor(colormap, cv2.COLOR_BGR2RGB)
+        res_1 = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.3, cv2.cvtColor(colormap.astype(np.uint8), cv2.COLOR_BGR2RGB), 0.7, 0.0)
+        # res_2 = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.3, color_ittention, 0.7, 0.0)
+
+
+
+
 
         # preprocess img
         tensor_img = transforms.Compose(transformations)(img)
@@ -298,7 +308,19 @@ if __name__ == "__main__":
             x = tensor_img,
             target_size = target_size,
             source = "SALICON"
-        )
+        ).squeeze(0).squeeze(0).squeeze(0)
+
+
+        print(predict_.shape)
+        saliency_map = predict_.exp()
+        saliency_map = torch.squeeze(saliency_map).detach().cpu().numpy()
+        saliency_map = (saliency_map / np.amax(saliency_map) * 255).astype(np.uint8)
+        saliency_map = cv2.resize(saliency_map, (img.shape[1], img.shape[0]))
+
+
+        colormap = cv2.applyColorMap((saliency_map).astype(np.uint8), cv2.COLORMAP_JET)
+        colormap = cv2.cvtColor(colormap, cv2.COLOR_BGR2RGB)
+        res_2 = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), 0.3, cv2.cvtColor(colormap.astype(np.uint8), cv2.COLOR_BGR2RGB), 0.7, 0.0)
 
 
         results_ = eval_sequences(
@@ -313,6 +335,15 @@ if __name__ == "__main__":
             rr_[key] = float(np.mean(np.asarray(v)))
             global_[key].append(float(np.mean(np.asarray(v))))
         results['eval'].append(rr_)
+
+        res = cv2.hconcat([img,res_1,res_2])
+        # cv2.imshow('img' ,res )
+        # cv2.waitKey()
+        cv2.imwrite(pathModel + "/examples/" + str(idx) + "_image.jpeg", res)
+
+
+
+
 
         # break
     

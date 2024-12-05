@@ -22,7 +22,7 @@ class ImageDataset(Dataset):
             path,
             preproc_cfg=None,
             input_size = (412,412),
-            target_size = (512,512)
+            target_size = (412,412)
         ):
 
         self.preproc_cfg = {

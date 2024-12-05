@@ -41,7 +41,7 @@ def normalize_tensor(tensor, rescale=False):
     return tensor / tsum if tsum > 0 else tensor.fill_(1. / tensor.numel())
 
 class Saliency:
-    def __init__(self, pathModel : str = "/weights/packging_3s/"):
+    def __init__(self, pathModel : str):
         assert( os.path.exists(pathModel)) , " Error folder model weights"
 
         with open(pathModel + "sources.json", 'r') as file:
@@ -290,12 +290,11 @@ def similarity(s_map, gt):
 
 
 if __name__ == "__main__":
-    file_ = "/Users/coconut/Documents/Dataset/GenSaliency/test/image_1.jpg"
+    path_ = "folder images ... "
 
-    saliency_ = Saliency( pathModel = "../weights/fine_tune_ittention_v1/")
+    saliency_ = Saliency( pathModel = "../model/weights/")
 
-
-    all_images_files = extract_images_from_folder("/Users/coconut/Documents/Dataset/GenSaliency/VisualSaliency/Packaging_delta_3_sigma_20/train/") 
+    all_images_files = extract_images_from_folder(path_) 
 
     for img in all_images_files:
         pred_map_ = saliency_.run(img['img'] , source="SALICON")
