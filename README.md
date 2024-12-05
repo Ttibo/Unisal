@@ -3,6 +3,10 @@
 
 Simplified implementation of the UNISAL model for saliency using PyTorch. This code includes training and validation features, as well as checkpoint management.
 
+
+![Python](https://img.shields.io/badge/python-3.11-blue)  
+![Status](https://img.shields.io/badge/status-in%20development-orange)  
+
 ## Table of Contents
 
 - [Features](#features)
