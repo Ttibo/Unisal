@@ -107,6 +107,17 @@ Here’s an example of how to use it:
 python trainer.py --num_epochs 50 --optim_algo Adam --lr 0.001 --path_save ./output/
 ```
 
+## Test image or video
+
+test image in scripts folder
+```bash
+python test_image.py --image [path image] --model [path model]
+```
+
+```bash
+python test_video.py --video [path video] --model [path model]
+```
+
 ## Contributions
 
 Contributions are welcome! Please submit a pull request or open an issue to discuss potential improvements.

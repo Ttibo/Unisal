@@ -10,7 +10,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from dataloaders import VideoPath
-import onnxruntime as ort  # Utilisation d'ONNX Runtime
+import argparse
+
 
 if torch.cuda.is_available():
     DEFAULT_DEVICE = torch.device("cuda:0")
@@ -20,21 +21,26 @@ else:
     DEFAULT_DEVICE = torch.device("cpu")
 
 if __name__ == "__main__":
-    # open model
-    model_path = "../model/weights/weights_best.pth"
+
+    # Créez un parser d'arguments
+    parser = argparse.ArgumentParser(description='Trainer for the model.')
+
+    # Ajoutez les arguments pour le Trainer
+    parser.add_argument('--video', type=str,default= "./inputs/video.mp4",  help='path image')
+    parser.add_argument('--model', type=str,default= "../model/weights/",  help='path model')
+    args = parser.parse_args()
+
 
     path_ = os.path.dirname(os.path.abspath(__file__))
     model = model.UNISAL(bypass_rnn=False)
-    model.load_weights( model_path)
+    model.load_weights( args.model + "weights_best.pth")
     model.to(DEFAULT_DEVICE)
     print(f"Device {DEFAULT_DEVICE}")
     frames_predic = []
 
-    file_ = "./inputs/video_1.mp4"
-    # file_ = "/Users/coconut/Documents/Video/Building makemore Part 2 MLP.mp4"
     videopath = VideoPath()
     videopath.open_video(
-        file = file_ , 
+        file = args.video , 
         fps = 15
     )
 

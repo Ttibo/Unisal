@@ -91,9 +91,20 @@ class Saliency:
         return map_.squeeze(0).squeeze(0).squeeze(0).detach().cpu().numpy()
     
 
+
+import argparse
 if __name__ == "__main__":
-    file_ = "./inputs/test_1.jpg"
-    saliency_ = Saliency(pathModel = "../model/weights/")
-    saliency_.run(file_)
+
+    # Créez un parser d'arguments
+    parser = argparse.ArgumentParser(description='Trainer for the model.')
+
+    # Ajoutez les arguments pour le Trainer
+    parser.add_argument('--image', type=str,default= "./inputs/test_1.jpg",  help='path image')
+    parser.add_argument('--model', type=str,default= "../model/weights/",  help='path model')
+
+    args = parser.parse_args()
+
+    saliency_ = Saliency(pathModel = args.model )
+    saliency_.run(args.image)
 
     plt.show()
